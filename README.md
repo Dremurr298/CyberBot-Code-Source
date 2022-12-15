@@ -1,1 +1,3 @@
 # CyberBot-Code-Source
+This is the source code of the "CyberBot" discord bot that I developed. this bot is<br>
+not released yet but I will make the bot code public... feel free to use it...

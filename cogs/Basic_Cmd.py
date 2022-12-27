@@ -384,13 +384,12 @@ class Basic_Cmd(commands.Cog):
                     view=self
                 )
 
-            async def on_timeout(interaction):
-                for child in self.children:
-                    child.disabled = True
-                
-                await interaction.message.edit(
-                    view=self
-                )
+            async def on_timeout(self):
+                self.home_button.disabled = True
+                self.end_button.disabled = True
+                self.right_button.disabled = True
+                self.left_button.disabled = True
+                await interaction.edit_original_message(view=self)
         
         await interaction.followup.send(
             embed=Start_Embed,

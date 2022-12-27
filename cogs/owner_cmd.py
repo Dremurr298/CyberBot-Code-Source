@@ -146,7 +146,7 @@ class owner_cmd(commands.Cog):
                     title='Question Menu [OWNER]',
                     description=(
                         '> Question Preview :\n'
-                        '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                        '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                         '> `Question :`\n'
                         f'{Question_Data["Question"]}\n\n'
                         '> `Answer :`\n'
@@ -154,7 +154,7 @@ class owner_cmd(commands.Cog):
                         f'> `B :` {Question_Data["Answer"]["B"]}\n'
                         f'> `C :` {Question_Data["Answer"]["C"]}\n\n'
                         f'> `Right Answer :` {Question_Data["R_Answer"]}\n'
-                        '━━━━━━━━━━━━━━━━━━━━━━━━━'
+                        '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
                     )
                     ,
                     color=color
@@ -193,7 +193,7 @@ class owner_cmd(commands.Cog):
             title='Question Menu [OWNER]',
             description=(
                 '> Question Preview :\n'
-                '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                 '> `Question :`\n'
                 f'{Question_Data["Question"]}\n\n'
                 '> `Answer :`\n'
@@ -201,7 +201,7 @@ class owner_cmd(commands.Cog):
                 f'> `B :` {Question_Data["Answer"]["B"]}\n'
                 f'> `C :` {Question_Data["Answer"]["C"]}\n\n'
                 f'> `Right Answer :` {Question_Data["R_Answer"]}\n'
-                '━━━━━━━━━━━━━━━━━━━━━━━━━'
+                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
             )
             ,
             color=color
@@ -347,7 +347,7 @@ class owner_cmd(commands.Cog):
                     title='Question Menu [OWNER]',
                     description=(
                         '> Question Preview :\n'
-                        '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                        '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                         '> `Question :`\n'
                         f'{Question_Data["Question"]}\n\n'
                         '> `Answer :`\n'
@@ -355,7 +355,7 @@ class owner_cmd(commands.Cog):
                         f'> `B :` {Question_Data["Answer"]["B"]}\n'
                         f'> `C :` {Question_Data["Answer"]["C"]}\n\n'
                         f'> `Right Answer :` {Question_Data["R_Answer"]}\n'
-                        '━━━━━━━━━━━━━━━━━━━━━━━━━'
+                        '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
                     )
                     ,
                     color=color
@@ -393,7 +393,7 @@ class owner_cmd(commands.Cog):
             title='Question Menu [OWNER]',
             description=(
                 '> Question Preview :\n'
-                '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                 '> `Question :`\n'
                 f'{Question_Data["Question"]}\n\n'
                 '> `Answer :`\n'
@@ -401,7 +401,7 @@ class owner_cmd(commands.Cog):
                 f'> `B :` {Question_Data["Answer"]["B"]}\n'
                 f'> `C :` {Question_Data["Answer"]["C"]}\n\n'
                 f'> `Right Answer :` {Question_Data["R_Answer"]}\n'
-                '━━━━━━━━━━━━━━━━━━━━━━━━━'
+                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
             )
             ,
             color=color

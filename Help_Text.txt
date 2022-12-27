@@ -1,0 +1,144 @@
+{
+    "command_total":23, 
+    "command":[ 
+        {
+            "name":"Sync command",
+            "amount":1,
+            "commands":[
+                {
+                    "name":"start_guild_sync",
+                    "Desc":"Sync all bot commands to the author server",
+                    "Usage":"cb.start_guild_sync"
+                }
+            ]
+        },
+        {
+            "name": "Bot Owners command",
+            "amount":4,
+            "commands":[
+                {
+                    "name":"sync",
+                    "Desc":"Synchronize the bot to get updates from the bot owner so that the command can appear/be visible in the guild where there are cyberbots",
+                    "Usage":"cb.sync"
+                },
+                {
+                    "name":"create_quest",
+                    "Desc":"Creating the questions for the game economy ( CyberProgrammer )",
+                    "Usage":"/create_quest"
+                },
+                {
+                    "name":"edit_quest",
+                    "Desc":"Editing the questions for the game economy ( CyberProgrammer )",
+                    "Usage":"/edit_quest {Question_ID}"
+                },
+                {
+                    "name":"exec",
+                    "Desc":"Execute an code from modal discord to the bot",
+                    "Usage":"/exec"
+                }
+            ]
+        },
+        {
+            "name":"Basic and Fun command",
+            "amount":7,
+            "commands":[
+                {
+                    "name":"help",
+                    "Desc":"Showing this help menu",
+                    "Usage":"/help"
+                },
+                {
+                    "name":"ping",
+                    "Desc":"Checking the latency of the CyberBot Discord bot.",
+                    "Usage":"/ping"
+                },
+                {
+                    "name":"ppsize",
+                    "Desc":"Fun command to show how long your pp is...",
+                    "Usage":"/ppsize {user -> None/Author}"
+                },
+                {
+                    "name":"howgay",
+                    "Desc":"Fun command to show how much % is your gay rates...",
+                    "Usage":"/howgay {user -> None/Author}"
+                },
+                {
+                    "name":"hownerd",
+                    "Desc":"Fun command to show how much % is your nerd rates...",
+                    "Usage":"/hownerd {user -> None/Author}"
+                },
+                {
+                    "name":"cf",
+                    "Desc":"Coinflip command, playing coinflip with the bot.",
+                    "Usage":"/cf {heads / tails}"
+                },
+                {
+                    "name":"uptime",
+                    "Desc":"See how long does the bot has online.",
+                    "Usage":"/uptime"
+                }
+            ]
+        },
+        {
+            "name":"Economy command",
+            "amount":11,
+            "commands":[
+                {
+                    "name":"start",
+                    "Desc":"Start a new CyberBot economy account.\n>> CAN ONLY BE USED ONCE <<.",
+                    "Usage":"/start"
+                },
+                {
+                    "name":"account",
+                    "Desc":"Check author account if only the Author already have cyberbots account.",
+                    "Usage":"/account"
+                },
+                {
+                    "name":"work",
+                    "Desc":"Work to get economy balance with the jobs that Author has been select.",
+                    "Usage":"/work"
+                },
+                {
+                    "name":"bal",
+                    "Desc":"Check Author or Someone's balance... only work if Author/Selected user have CyberBots Account",
+                    "Usage":"/bal {user -> None/Author}"
+                },
+                {
+                    "name":"reward",
+                    "Desc":"Checking or claiming a hourly/daily/moonthly rewards.",
+                    "Usage":"/reward {hourly/daily/moonthly -> None/Checking}"
+                },
+                {
+                    "name":"level-up",
+                    "Desc":"Increase cyberbot account with cost of Exp.",
+                    "Usage":"/level-up"
+                },
+                {
+                    "name":"leaderboard",
+                    "Desc":"See the top 10 players of cyberbot economy count by **CyberMoney**.",
+                    "Usage":"/leaderboard"
+                },
+                {
+                    "name":"shop",
+                    "Desc":"See, buy, or sell the items CyberBot Economy.",
+                    "Usage":"/shop"
+                },
+                {
+                    "name":"inventory",
+                    "Desc":"See item that avaible in user CyberBot Economy.",
+                    "Usage":"/inventory"
+                },
+                {
+                    "name":"use-item",
+                    "Desc":"Using an item thats available and equipable from user inventory.",
+                    "Usage":"/use-item {Item-Name} {Amount}"
+                },
+                {
+                    "name":"effect-time",
+                    "Desc":"Check item time effect. like booster or reducer.",
+                    "Usage":"/effect-time {Item-Name}"
+                }
+            ]
+        }
+    ]
+}

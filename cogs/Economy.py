@@ -251,7 +251,7 @@ class Economy_Cmd(commands.Cog):
                     '> make a video then post it. you can get a money\n'
                     '> from it after you get **Monetize Sertificate**\n\n'
 
-                    '━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
+                    '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n'
 
                     f'> {Emoji_3} | **CyberProgramming**\n'
                     '> *Answer an question about code an earn money!*\n\n'
@@ -456,14 +456,14 @@ class Economy_Cmd(commands.Cog):
                             "Its just for fun. You don't have to \nbe serious about playing it.\n"
                             "Follow discord rules and our rules!\n```"
 
-                            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
                             '```\nRules :\n\n'
 
                             '1. Follow the rules of discord (TOS)\n'
                             '2. No cheating\n'
                             '3. No exploit errors/bugs\n'
                             '4. Have fun\n```'
-                            '━━━━━━━━━━━━━━━━━━━━━━━━━'
+                            '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯'
                         ),
                         color=color
                     )
@@ -688,9 +688,9 @@ class Economy_Cmd(commands.Cog):
                         f'{Emoji_17} | `Shard   :` `{Shard:,}`\n'            # user shard
                         f'{Emoji_1} | `Level   :` `{Level:,}`\n'             # user level
                         f'{Emoji_10} | `Exp     :` `{Exp:,}`/{MaxExp:,}\n'   # user exp and max exp
-                        f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'      
+                        f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'      
                         f'{CBio}\n'                                          # user bio
-                        f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'  
+                        f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'  
                         f'{Emoji_9} | `CJobs                  :` `{CJobs}`\n'              # user jobs
                         f'{Emoji_4} | `CName                  :` `{CName}`\n'              # Channel Name
                         f'{Emoji_3} | `CSubs                  :` `{CSubs:,}`\n'            # user total subscriber
@@ -731,9 +731,9 @@ class Economy_Cmd(commands.Cog):
                         f'{Emoji_17} | Shard : `{Shard:,}`\n'        # user shard
                         f'{Emoji_1} | Level : `{Level:,}`\n'         # user level
                         f'{Emoji_10} | Exp : `{Exp:,}/{MaxExp:,}`\n' # user exp and max exp
-                        f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                        f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                         f'{CBio}\n'                                  # user BIO
-                        f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                        f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                         f'{Emoji_9} | CJobs : `{CJobs}`\n'
                         f'{Emoji_14} | CQdone : `{QDone}`\n'
                         f'{Emoji_13} | CSall : `{CSall:,}`'
@@ -766,6 +766,7 @@ class Economy_Cmd(commands.Cog):
         Emoji_6 = discord.utils.get(Guild.emojis, name='CYBDISLIKE')
         Emoji_7 = discord.utils.get(Guild.emojis, name='CYBMONEY')
         Emoji_8 = discord.utils.get(Guild.emojis, name='CYBERPROFESSION')
+        Emoji_9 = discord.utils.get(Guild.emojis, name='CYBEXP')
         #----------
 
         check = cursor.find_one({'id':user_id})
@@ -785,10 +786,15 @@ class Economy_Cmd(commands.Cog):
         else:
             Job = check['Jobs_Data']['CJobs']
             cd = get_cooldown(user_id, 'W_CD')
+            cd_val = 120
+
+            check_eff = effect_time(user_id, 'C_Boost')
+            if check_eff[1] != 'None':
+                cd_val -= 15
 
             if cd[0] != 0:
-                if cd[0] < 60:
-                    var_wait = 60 - cd[0]
+                if cd[0] < cd_val:
+                    var_wait = cd_val - cd[0]
                     Embed = discord.Embed(
                         title = f'{Emoji_8} | Work Failed',
                         description = f'> Please wait for `{datetime.timedelta(seconds=var_wait)}s`!',
@@ -866,23 +872,36 @@ class Economy_Cmd(commands.Cog):
                             G_Subs = int(G_View / random.uniform(1,4.25))
                             G_Like = int(G_View / random.uniform(1,2.56))
                             G_DLike = int(G_Like / random.uniform(1,1.54))
+                            G_Exps = random.randint(30,100)
+
+                            check_eff = effect_time(user_id, 'Xp_Boost')
+                            check_eff_2 = effect_time(user_id, 'S_Boost')
+                            check_eff_3 = effect_time(user_id, 'V_Boost')
+
+                            if check_eff[1] != 'None':
+                                G_Exps = int(G_Exps * 1.35)
+                            if check_eff_2[1] != 'None':
+                                G_Subs += 120
+                            if check_eff_3[1] != 'None':
+                                G_View += 235
                             
                             if CSert != 'None':
-                                G_Money = int(random.randint(1,G_View)) * 5
+                                G_Money = int(random.randint(1,G_View) * 5)
                             else:
                                 G_Money = 0
 
                             Embed = discord.Embed(
                                 title=f'{Emoji_2} | {Video_Name}',
                                 description=(
-                                    f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                                    f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                                     f'{Video_Desc}\n'
-                                    f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                                    f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                                     f'{Emoji_3} | `Subs     : +{G_Subs:,}`\n'
                                     f'{Emoji_4} | `Views    : +{G_View:,}`\n'
                                     f'{Emoji_5} | `Likes    : +{G_Like:,}`\n'
                                     f'{Emoji_6} | `Dislikes : +{G_DLike:,}\n`'
-                                    f'{Emoji_7} | `Money    : +{G_Money}`'
+                                    f'{Emoji_7} | `Money    : +{G_Money:,}`\n'
+                                    f'{Emoji_9} | `Exp      : +{G_Exps:,}`'
                                 ),
                                 color=color
                             )
@@ -903,6 +922,7 @@ class Economy_Cmd(commands.Cog):
                             DB4 = check['CDislike'] + G_DLike
                             DB5 = check_['NetWorth'] + G_Money
                             DB6 = check_['Money'] + G_Money
+                            DB7 = check['Exp'] + G_Exps
 
                             check['CSubs'] = DB1
                             check['CView'] = DB2
@@ -911,6 +931,7 @@ class Economy_Cmd(commands.Cog):
                             check_['NetWorth'] = DB5
                             check_['Money'] = DB6
                             check['CVideo'].append(f'{Video_Name}')
+                            check['Exp'] = DB7
 
                             cursor.update_many(
                                 {'id':user_id},{'$set':{
@@ -952,7 +973,7 @@ class Economy_Cmd(commands.Cog):
                     Put_Data = {
                         'Embed_description':(
                             f'{Question}\n'
-                            '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                            '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                             f'> A | {A}\n'
                             f'> B | {B}\n'
                             f'> C | {C}'
@@ -990,6 +1011,7 @@ class Economy_Cmd(commands.Cog):
                         self.count = 0
                         self.U_Right_Answer = 0
                         self.U_Wrong_Answer = 0
+                        self.Sall = Sall
                     
                     @ui.button(label='Ready',style=discord.ButtonStyle.green, custom_id = 'Ready_Next_BT')
                     async def ready_bt(self, interaction, button: ui.Button):
@@ -1013,12 +1035,21 @@ class Economy_Cmd(commands.Cog):
                             for item in self.children:
                                 item.disabled = True
 
+                            G_Exps = random.randint(30,100)
+
+                            check_eff = effect_time(user_id, 'Xp_Boost')
+                            check_eff_2 = effect_time(user_id, 'Sal_Boost')
+                            if check_eff[1] != 'None':
+                                G_Exps = int(G_Exps * 1.35)
+                            if check_eff_2[1] != 'None':
+                                self.Sall = int(self.Sall * 1.20)
+
                             Embed = discord.Embed(
                                 title = f'{Emoji_8} | Working Done...',
                                 description = (
                                     f'`Right Answer :` {custom_drawbar(self.U_Right_Answer, 10, Work_Turn, "🟦", "⬛")} `| {self.U_Right_Answer}`\n'
                                     f'`Wrong Answer :` {custom_drawbar(self.U_Wrong_Answer, 10, Work_Turn, "🟦", "⬛")} `| {self.U_Wrong_Answer}`\n'
-                                    f'`Total Income :` `+{self.U_Right_Answer * Sall:,}` CyberMoney\n'
+                                    f'`Total Income :` `+{self.U_Right_Answer * self.Sall:,}` CyberMoney - `+{G_Exps:,}` Exp\n'
                                 ),
                                 color=color
                             )
@@ -1033,9 +1064,10 @@ class Economy_Cmd(commands.Cog):
                             check_1 = dict(check['N_economy_Data'])
                             check_2 = dict(check['Jobs_Data'])
 
-                            check_1['Money'] += self.U_Right_Answer * Sall
-                            check_1['NetWorth'] += self.U_Right_Answer * Sall
+                            check_1['Money'] += self.U_Right_Answer * self.Sall
+                            check_1['NetWorth'] += self.U_Right_Answer * self.Sall
                             check_2['CQuest'] += self.U_Right_Answer
+                            check_1['Exp'] += int(G_Exps / 2 * self.U_Right_Answer)
 
                             cursor.update_many({'id':user_id},{'$set':{
                                 'N_economy_Data':check_1,
@@ -1087,7 +1119,7 @@ class Economy_Cmd(commands.Cog):
                                         title=f'{Emoji_8} | Question [{self.view.count+1}/{Work_Turn}]',
                                         description=(
                                             f'{Question_List[self.view.count]["Embed_description"]}\n'
-                                            '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                                            '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                                             '> Your Answer Was Right!'
                                         ),
                                         color=color
@@ -1100,7 +1132,7 @@ class Economy_Cmd(commands.Cog):
                                         title=f'{Emoji_8} | Question [{self.view.count+1}/{Work_Turn}]',
                                         description=(
                                             f'{Question_List[self.view.count]["Embed_description"]}\n'
-                                            '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                                            '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                                             f'> Sorry, your Answer Was wrong...\n'
                                             f'> The Right Answer is **{Question_List[self.view.count]["Right_Answer"]}**'
                                         ),
@@ -1165,9 +1197,9 @@ class Economy_Cmd(commands.Cog):
                         Embed = discord.Embed(
                             title = f'{Emoji_8} | Working Done...',
                             description = (
-                                f'Right Answer : {custom_drawbar(self.U_Right_Answer, 10, Work_Turn, "🟦", "⬛")} `| {self.U_Right_Answer}`\n'
-                                f'Wrong Answer : {custom_drawbar(self.U_Wrong_Answer, 10, Work_Turn, "🟦", "⬛")} `| {self.U_Wrong_Answer}`\n'
-                                f'Total Income : `+{self.U_Right_Answer * Sall:,}` CyberMoney\n'
+                                f'`Right Answer :` {custom_drawbar(self.U_Right_Answer, 10, Work_Turn, "🟦", "⬛")} `| {self.U_Right_Answer}`\n'
+                                f'`Wrong Answer :` {custom_drawbar(self.U_Wrong_Answer, 10, Work_Turn, "🟦", "⬛")} `| {self.U_Wrong_Answer}`\n'
+                                f'`Total Income :` `+{self.U_Right_Answer * self.Sall:,}` CyberMoney - [PH] Exp\n'
                             ),
                             color=color
                         )
@@ -1182,9 +1214,19 @@ class Economy_Cmd(commands.Cog):
                         check_1 = dict(check['N_economy_Data'])
                         check_2 = dict(check['Jobs_Data'])
 
-                        check_1['Money'] += self.U_Right_Answer * Sall
-                        check_1['NetWorth'] += self.U_Right_Answer * Sall
+                        G_Exps = random.randint(30,100)
+
+                        check_eff = effect_time(user_id, 'Xp_Boost')
+                        check_eff_2 = effect_time(user_id, 'Sal_Boost')
+                        if check_eff[1] != 'None':
+                            G_Exps = int(G_Exps * 1.35)
+                        if check_eff_2[1] != 'None':
+                            self.Sall = int(self.Sall * 1.20)
+
+                        check_1['Money'] += self.U_Right_Answer * self.Sall
+                        check_1['NetWorth'] += self.U_Right_Answer * self.Sall
                         check_2['CQuest'] += self.U_Right_Answer
+                        check_1['Exp'] += int(G_Exps / 2 * self.U_Right_Answer)
 
                         cursor.update_many({'id':user_id},{'$set':{
                             'N_economy_Data':check_1,
@@ -1503,7 +1545,7 @@ class Economy_Cmd(commands.Cog):
                         title=f'{Emoji_4} | Level-up Failed...',
                         description=(
                             f'> Sorry {user_name} you cant level-up yet...\n'
-                            f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                            f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                             f'> {Emoji_3} | Your Exp :\n'
                             f'> {custom_drawbar(user_exp, 15, user_mxp, "🟦", "⬛")} | {user_exp:,}/{user_mxp}'
                         ),
@@ -1533,11 +1575,11 @@ class Economy_Cmd(commands.Cog):
                         title=f'{Emoji_4} | Level-up success!',
                         description=(
                             f'> {user_name} Level is now increased!\n'
-                            f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-                            f'> {Emoji_3} | `{user_exp:,}/{user_mxp:,}` -> `{for_db["N_economy_Data"]["Exp"]:,}/{for_db["N_economy_Data"]["MaxExp"]:,}`\n'
-                            f'> {Emoji_4} | `{user_lvl:,}` -> `{for_db["N_economy_Data"]["Level"]:,}`\n'
-                            f'> {Emoji_5} | `+{Subs_Reward:,}`\n'
-                            f'> {Emoji_2} | `+{Money_Reward:,}`'
+                            f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
+                            f'> {Emoji_3} User Exp :\n```{user_exp:,}/{user_mxp:,} -> {for_db["N_economy_Data"]["Exp"]:,}/{for_db["N_economy_Data"]["MaxExp"]:,}```\n'
+                            f'> {Emoji_4} User Level :\n```{user_lvl:,} -> {for_db["N_economy_Data"]["Level"]:,}```\n'
+                            f'> {Emoji_5} User Subs :\n```+{Subs_Reward:,}```\n'
+                            f'> {Emoji_2} User Money :\n```+{Money_Reward:,}```'
                         ),
                         color=color
                     )
@@ -1555,7 +1597,7 @@ class Economy_Cmd(commands.Cog):
                         title=f'{Emoji_4} | Level-up Failed...',
                         description=(
                             f'> Sorry {user_name} you cant level-up yet...\n'
-                            f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                            f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                             f'> {Emoji_3} | Your Exp :\n'
                             f'```{custom_drawbar(user_exp, 15, user_mxp, "🟦", "⬛")} | {user_exp:,}/{user_mxp}```'
                         ),
@@ -1584,11 +1626,11 @@ class Economy_Cmd(commands.Cog):
                         title=f'{Emoji_4} | Level-up success!',
                         description=(
                             f'> {user_name} Level is now increased!\n'
-                            f'━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-                            f'> {Emoji_3} | `{user_exp:,}/{user_mxp:,}` -> `{for_db["N_economy_Data"]["Exp"]:,}/{for_db["N_economy_Data"]["MaxExp"]:,}`\n'
-                            f'> {Emoji_4} | `{user_lvl:,}` -> `{for_db["N_economy_Data"]["Level"]:,}`\n'
-                            f'> {Emoji_6} | `{user_sal:,}` -> `{for_db["Jobs_Data"]["CSall"]:,}`\n'
-                            f'> {Emoji_2} | `+{Money_Reward:,}`'
+                            f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
+                            f'> {Emoji_3} User Exp : ```{user_exp:,}/{user_mxp:,} -> {for_db["N_economy_Data"]["Exp"]:,}/{for_db["N_economy_Data"]["MaxExp"]:,}```\n'
+                            f'> {Emoji_4} User Level : ```{user_lvl:,} -> {for_db["N_economy_Data"]["Level"]:,}```\n'
+                            f'> {Emoji_6} User Sallary : ```{user_sal:,} -> {for_db["Jobs_Data"]["CSall"]:,}```\n'
+                            f'> {Emoji_2} User Money : ```+{Money_Reward:,}```'
                         ),
                         color=color
                     )
@@ -1673,7 +1715,7 @@ class Economy_Cmd(commands.Cog):
             description=(
                 f'```\nTop User : {Svd_Data[1]}'
                 f'Your Position : {User_poss-1}\n```'
-                '━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
                 f'{Embed_Message}'
             ),
             color=color
@@ -1728,10 +1770,10 @@ class Economy_Cmd(commands.Cog):
                     'Index':0,
                     'Embed': (
                             f"> Welcome to CyberBot Shop {user_name}!\n"
-                            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
                             f"> {Emoji_2} | **CyberMoney** :" "`{Money}`\n"
                             f"> {Emoji_8} | **Shard** :" "`{Shard}`\n"
-                            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
                             "> `🟩` | Want to buy an item? use **Buy** Button and enter the item id.\n"
                             "> `🟥` | Want to sell an item? use **Sell** Button and enter the item id.\n"
                             "> `🟪` | Want to see other shop categories? you can use **select [CATEGORY]**.\n"
@@ -1741,7 +1783,7 @@ class Economy_Cmd(commands.Cog):
                             "> If you wanna see the item that are can be sell or not, \n"
                             "> you can see with select page. if item can be sell there will be\n"
                             "> **[SELLABLE]** in the right of the item name...\n"
-                            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
                             "> Please note, some item prices are subject to\n"
                             "> change at any time, be careful when buying items!"
                         )
@@ -1756,10 +1798,10 @@ class Economy_Cmd(commands.Cog):
                                 ```py
                                 Normal Item Shop '[Booster - Reducer]'
                                 ```
-                                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                                ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                                 > {Emoji_2} | **Money** : `{Money:,}`
                                 > {Emoji_8} | **Shard** : `{Shard:,}`
-                                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                                ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 
                                 > {Emoji_6} | **Exp Booster**
                                 ```py
@@ -1800,7 +1842,7 @@ class Economy_Cmd(commands.Cog):
                                 Cost   : 14,000 CyberMoney
                                 ID     : VB1
                                 ```
-                                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                                ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         """).replace('    ', '')
                         ),
                         color=color
@@ -1813,14 +1855,14 @@ class Economy_Cmd(commands.Cog):
                     'Embed': """
                         > Sorry {user}, Item with id **{ID}** could not be found.
                         > Please put the right id to buy or sell an item!
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Not Found
                         Item  : None
                         Cost  : None
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                      """.replace('   ', ''),
                     'Index':0
                 },
@@ -1828,14 +1870,14 @@ class Economy_Cmd(commands.Cog):
                     'Page_Name':'Buy - sell Found',
                     'Embed': """
                         > Item with id **{ID}** has been found!
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Found
                         Item  : {Item_Name}
                         Cost  : {Item_Cost}
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         > If you want to buy this item you can press the **Buy** button again bellow, 
                         > otherwise you can return home by pressing the **Home** button
                     """.replace('   ', ''),
@@ -1845,14 +1887,14 @@ class Economy_Cmd(commands.Cog):
                     'Page_Name':'Jobs Aren`t Macth',
                     'Embed':"""
                         > Item with id **{ID}** has been found!
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Found
                         Item  : {Item_Name}
                         Cost  : {Item_Cost}
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         > Item was found but you cant buy this item because
                         > The Jobs aren't match. This Item is for **{Item_Jobs}** Jobs
                     """.replace('   ', ''),
@@ -1862,14 +1904,14 @@ class Economy_Cmd(commands.Cog):
                     'Page_Name':'Money isn`t enough',
                     'Embed':"""
                         > Sorry {user} but your money isn't enough to buy this item.
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Found
                         Item  : {Item_Name}
                         Cost  : {Item_Cost}
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         > `🟦` | {user} CyberMoney : `{u_money}`
                         > `🟦` | Total Item : `{Total_Amount}`
                         > `🟦` | Cost Total : `{Total_Cost}`
@@ -1880,14 +1922,14 @@ class Economy_Cmd(commands.Cog):
                     'Page_Name':'Success Buying-Selling',
                     'Embed':"""
                         > Success Buying A {Item_Name}!
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Found
                         Item  : {Item_Name}
                         Cost  : {Item_Cost}
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         > `🟦` | {user} {Item_Name} : +`{Total_Amount}`
                         > `🟦` | {user} CyberMoney : -`{Total_Cost}`
                     """.replace('   ', ''),
@@ -1897,14 +1939,14 @@ class Economy_Cmd(commands.Cog):
                     'Page_Name':'Items cannot be sold',
                     'Embed':"""
                         > Item with id **{ID}** has been found!
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Found
                         Item  : {Item_Name}
                         Cost  : {Item_Cost}
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         > Sorry {user}, this item cannot be sold. You can return 
                         > to the first menu by clicking the **HOME** Button
                     """.replace('   ', ''),
@@ -1914,20 +1956,20 @@ class Economy_Cmd(commands.Cog):
                     'Page_Name':'Item isnt enough',
                     'Embed':"""
                         > Item with id **{ID}** has been found!
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         ```py
                         State : Found
                         Item  : {Item_Name}
                         Cost  : {Item_Cost}
                         Id    : {ID}
                         ```
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                         > Sorry {user}, but {Item_Name} Amount in your
                         > inventory is not enough to sell...
 
                         > `🟦` | Amount {Item_Name} To Sell : `{Amount}`
                         > `🟦` | Amount {Item_Name} in inventory : `{U_Amount}`
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                     """.replace('   ', ''),
                     'index':6 
                 },
@@ -2542,12 +2584,12 @@ class Economy_Cmd(commands.Cog):
                             title=f'{Emoji_1} | Successfully using item!',
                             description=f"""
                                 > Successfully using **{Item_Name}** `x{amount}!`
-                                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                                ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                                 > Before :
                                 ```{Before[0]}```
                                 > After :
                                 ```{After[0]}```
-                                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                                ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
                             """.replace('   ',''),
                             color=color
                         )

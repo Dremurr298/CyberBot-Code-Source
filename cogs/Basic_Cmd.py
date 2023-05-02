@@ -3,6 +3,7 @@ import time
 import random
 import json
 import datetime
+import prettytable
 from discord.ext import commands
 from discord import app_commands
 
@@ -10,6 +11,7 @@ from discord import app_commands
 
 Color = 233087
 Help_Str = json.loads(open('./Help_Text.txt').read())
+News_Str = json.loads(open('./news.txt','rb').read())
 privguild = 979708145905594439
 Bot_Time = time.time()
 
@@ -34,369 +36,6 @@ class Basic_Cmd(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="help")
-    async def help(self, interaction: discord.Interaction) -> None:
-        """For searching an command!"""
-        await interaction.response.defer()
-
-        f_user = interaction.user
-        user_name = f_user.name
-        Time = datetime.datetime.now()
-
-        #-------------------
-        
-        Guild = self.bot.get_guild(privguild)
-
-        Emoji_1 = discord.utils.get(Guild.emojis, name='CYBUSER')
-        Emoji_2 = discord.utils.get(Guild.emojis, name='CYBTUBE')
-        Emoji_3 = discord.utils.get(Guild.emojis, name='PROGRAMMING')
-        Emoji_4 = discord.utils.get(Guild.emojis, name='CYBERPROFESSION')
-
-        #-------------------
-
-        Start_Embed = discord.Embed(
-            title=f'{Emoji_1} | {user_name} Help Panel',
-            description=(
-                '> Please select a category in the selectmenu at the bottom\n'
-                '> of the embed To see the spesific command.\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                '> `[<<]   |` Go to left\n'
-                '> `[>>]   |` Go to right\n'
-                '> `[HOME] |` Go to start of the page\n'
-                '> `[END]  |` End the interaction'
-            ),
-            color=Color
-        )
-        Start_Embed.set_footer(text=f'Executor : {user_name} | {Time}')
-        Desc_Embed_Dict = [
-            (
-                '> **Sync Command**\n'
-                '```This is place to see a sync command,\n'
-                'although the bot is automatically sync when joined the guild\n'
-                'there is some situation that need to be sync again```\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                '> Total Command : {TCOMMAND}\n'
-                '> List Command :\n'
-                '```{LCMD}```\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-            ),
-            (
-                '> **Bot Owner Command**\n'
-                '```Sometimes i forgot what is command to do something\n'
-                "and I'm lazy to look through the code. its need lot of scroll..```\n"
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                '> Total Command : {TCOMMAND}\n'
-                '> List Command :\n'
-                '```{LCMD}```\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-            ),
-            (
-                '> **Basic and Fun command**\n'
-                '```This is place to see basic / fun command\n'
-                'like /help, /howgay, /hownerd or /ping...```'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                '> Total Command : {TCOMMAND}\n'
-                '> List Command :\n'
-                '```{LCMD}```\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-            ),
-            (
-                '> **Economy command**\n'
-                '```This is place to see economy command,\n'
-                'like /start, /work, /account, etc```\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                '> Total Command : {TCOMMAND}\n'
-                '> List Command :\n'
-                '```{LCMD}```\n'
-                '⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-            )
-                
-        ]
-        
-        Command_Cat_T = len([s for s in Help_Str['command']])
-        Sellect_Category = []
-        
-        for count in range(Command_Cat_T):
-            Category_name = f"{Help_Str['command'][count]['name']}"
-            Sellect_Category.append(
-                discord.SelectOption(
-                    label=Category_name,
-                    value=count,
-                    description=f'Page Contains About {Category_name}'
-                )
-            )
-
-        class Help_Panel(discord.ui.View):
-            def __init__(self):
-                super().__init__()
-                self.Category_Track = 0
-                self.Help_Track = 0
-                self.max_track = 0
-
-                self.right_button.disabled = True
-                self.left_button.disabled = True
-                self.home_button.disabled = True
-                self.end_button.disabled = False
-            
-            @discord.ui.select(placeholder='Select The Category',max_values=1,min_values=1,options=Sellect_Category)
-            async def Help_Panel(self, interaction, select:discord.ui.Select):
-                user = f_user
-                user_id = user.id
-                user_name = user.name
-                inter_id = interaction.user.id
-
-                if inter_id != user_id:
-                    await interaction.response.defer()
-                    await interaction.followup.send(
-                        content=f'Sorry This Menu is controlled by {user_name}',
-                        ephemeral=True
-                    )
-                    return inter_id == user_id
-
-                self.Help_Track = 0
-                self.Category_Track = int(self.Help_Panel.values[0])
-                base_dict = Help_Str['command'][self.Category_Track]
-                ins_base_dict = base_dict['commands'][self.Help_Track]
-
-                cmd_name = ins_base_dict['name']
-                cmd_desc = ins_base_dict['Desc']
-                cmd_usage = ins_base_dict['Usage']
-                cmd_list = []
-
-                for count_hold in range(len(base_dict['commands'])):
-                    cmd_list.append(base_dict['commands'][count_hold]['name'])
-
-                self.max_track = int(len(cmd_list))
-                cmd_list = ', '.join(cmd_list)
-                
-                replace_dict = f'{Desc_Embed_Dict[int(self.Category_Track)]}'.replace("{TCOMMAND}",f"{base_dict['amount']}")
-                replace_dict = f'{replace_dict.replace("{LCMD}",f"{cmd_list}")}'
-
-                show_desc = (
-                    f'{replace_dict}\n'
-                    f'> **{cmd_name}**\n'
-                    f'```{cmd_desc}```\n'
-                    f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                    f'Usage : {cmd_usage}'
-                )
-
-                await interaction.response.defer()
-                Embed = discord.Embed(
-                    title=f'{Emoji_1} | {user_name} Help Panel',
-                    description=f'{show_desc}',
-                    color=Color
-                )
-                Start_Embed.set_footer(text=f'Executor : {user_name} | {Time}')
-
-                if self.max_track == 1:
-                    self.left_button.disabled = True
-                    self.right_button.disabled = True
-
-                else:
-                    self.right_button.disabled = False
-                
-                self.home_button.disabled = False
-                self.end_button.disabled = False
-
-                await interaction.message.edit(
-                    embed=Embed,
-                    view=self
-                )
-                
-            @discord.ui.button(label='[<<]',style=discord.ButtonStyle.green)
-            async def left_button(self, interaction, button:discord.ui.Button):
-                user = f_user
-                user_id = user.id
-                user_name = user.name
-                inter_id = interaction.user.id
-
-                if inter_id != user_id:
-                    await interaction.response.defer()
-                    await interaction.followup.send(
-                        content=f'Sorry This Menu is controlled by {user_name}',
-                        ephemeral=True
-                    )
-                    return inter_id == user_id
-
-                await interaction.response.defer()
-                
-                self.Help_Track -= 1
-                if self.Help_Track <= 0:
-                    if self.max_track == 1:
-                        self.left_button.disabled = True
-                        self.right_button.disabled = True
-                    
-                    else:
-                        self.left_button.disabled = True
-
-                    self.home_button.disabled = False
-                    self.end_button.disabled = False
-                    self.Help_Track = 0
-                
-                else:
-                    self.right_button.disabled = False
-
-                base_dict = Help_Str['command'][self.Category_Track]
-                ins_base_dict = base_dict['commands'][self.Help_Track]
-
-                cmd_name = ins_base_dict['name']
-                cmd_desc = ins_base_dict['Desc']
-                cmd_usage = ins_base_dict['Usage']
-                cmd_list = []
-
-                for count_hold in range(len(base_dict['commands'])):
-                    cmd_list.append(base_dict['commands'][count_hold]['name'])
-
-                cmd_list = ', '.join(cmd_list)
-                
-                replace_dict = f'{Desc_Embed_Dict[int(self.Category_Track)]}'.replace("{TCOMMAND}",f"{base_dict['amount']}")
-                replace_dict = f'{replace_dict.replace("{LCMD}",f"{cmd_list}")}'
-
-                show_desc = (
-                    f'{replace_dict}\n'
-                    f'> **{cmd_name}**\n'
-                    f'```{cmd_desc}```\n'
-                    f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                    f'Usage : {cmd_usage}'
-                )
-                Embed = discord.Embed(
-                    title=f'{Emoji_1} | {user_name} Help Panel',
-                    description=f'{show_desc}',
-                    color=Color
-                )
-                Start_Embed.set_footer(text=f'Executor : {user_name} | {Time}')
-                await interaction.message.edit(
-                    embed=Embed,
-                    view=self
-                )
-
-            @discord.ui.button(label='[>>]',style=discord.ButtonStyle.green)
-            async def right_button(self, interaction, button:discord.ui.Button):
-                user = f_user
-                user_id = user.id
-                user_name = user.name
-                inter_id = interaction.user.id
-
-                if inter_id != user_id:
-                    await interaction.response.defer()
-                    await interaction.followup.send(
-                        content=f'Sorry This Menu is controlled by {user_name}',
-                        ephemeral=True
-                    )
-                    return inter_id == user_id
-
-                await interaction.response.defer()
-                self.Help_Track += 1
-                if self.Help_Track == (self.max_track-1):
-                    if self.max_track == 1:
-                        self.left_button.disabled = True
-                        self.right_button.disabled = True
-                    
-                    else:
-                        self.right_button.disabled = True
-
-                    self.home_button.disabled = False
-                    self.end_button.disabled = False
-                
-                else:
-                    self.left_button.disabled = False
-                
-                base_dict = Help_Str['command'][self.Category_Track]
-                ins_base_dict = base_dict['commands'][self.Help_Track]
-
-                cmd_name = ins_base_dict['name']
-                cmd_desc = ins_base_dict['Desc']
-                cmd_usage = ins_base_dict['Usage']
-                cmd_list = []
-
-                for count_hold in range(len(base_dict['commands'])):
-                    cmd_list.append(base_dict['commands'][count_hold]['name'])
-
-                cmd_list = ', '.join(cmd_list)
-                
-                replace_dict = f'{Desc_Embed_Dict[int(self.Category_Track)]}'.replace("{TCOMMAND}",f"{base_dict['amount']}")
-                replace_dict = f'{replace_dict.replace("{LCMD}",f"{cmd_list}")}'
-
-                show_desc = (
-                    f'{replace_dict}\n'
-                    f'> **{cmd_name}**\n'
-                    f'```{cmd_desc}```\n'
-                    f'⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n'
-                    f'Usage : {cmd_usage}'
-                )
-                Embed = discord.Embed(
-                    title=f'{Emoji_1} | {user_name} Help Panel',
-                    description=f'{show_desc}',
-                    color=Color
-                )
-                Start_Embed.set_footer(text=f'Executor : {user_name} | {Time}')
-                await interaction.message.edit(
-                    embed=Embed,
-                    view=self
-                )
-        
-            @discord.ui.button(label='[HOME]',style=discord.ButtonStyle.red)
-            async def home_button(self, interaction, button:discord.ui.Button):
-                user = f_user
-                user_id = user.id
-                user_name = user.name
-                inter_id = interaction.user.id
-
-                if inter_id != user_id:
-                    await interaction.response.defer()
-                    await interaction.followup.send(
-                        content=f'Sorry This Menu is controlled by {user_name}',
-                        ephemeral=True
-                    )
-                    return inter_id == user_id
-                
-                await interaction.response.defer()
-
-                self.right_button.disabled = True
-                self.left_button.disabled = True
-                self.home_button.disabled = True
-
-                await interaction.message.edit(
-                    embed=Start_Embed,
-                    view=self
-                )
-        
-            @discord.ui.button(label='[END]')
-            async def end_button(self, interaction, button:discord.ui.Button):
-                user = f_user
-                user_id = user.id
-                user_name = user.name
-                inter_id = interaction.user.id
-
-                if inter_id != user_id:
-                    await interaction.response.defer()
-                    await interaction.followup.send(
-                        content=f'Sorry This Menu is controlled by {user_name}',
-                        ephemeral=True
-                    )
-                    return inter_id == user_id
-                
-                await interaction.response.defer()
-                for child in self.children:
-                    child.disabled = True
-                
-                await interaction.message.edit(
-                    view=self
-                )
-
-            async def on_timeout(self):
-                self.home_button.disabled = True
-                self.end_button.disabled = True
-                self.right_button.disabled = True
-                self.left_button.disabled = True
-                await interaction.edit_original_message(view=self)
-        
-        await interaction.followup.send(
-            embed=Start_Embed,
-            view=Help_Panel()
-        )
-                
-
     @app_commands.command(name='ping')
     async def ping(self, interaction: discord.Interaction) -> None:
         """Showing My Latency!"""
@@ -406,7 +45,7 @@ class Basic_Cmd(commands.Cog):
 
         Embed = discord.Embed(
             title=f'CyberBot Ping',
-            description=f'Pong! `{Latency}`',
+            description=f'Pong! `{Latency}ms`',
             color=Color
         )
         Embed.set_footer(text=f'Executor : {interaction.user.name} | {Time}')
@@ -552,6 +191,121 @@ class Basic_Cmd(commands.Cog):
         Embed.set_footer(text=f'Executor : {user_name} | {Time}')
         await interaction.followup.send(embed=Embed)
 
+    @app_commands.command(name='news')
+    async def news(self, interaction: discord.Interaction):
+        """A Place to see an cyberbot top news!"""
+        await interaction.response.defer()
+
+        f_user = interaction.user
+        user_name = f_user.name
+        Time = datetime.datetime.now()
+
+        #-------------------
+        
+        Guild = self.bot.get_guild(privguild)
+
+        Emoji_1 = discord.utils.get(Guild.emojis, name='CYBUSER')
+        Emoji_2 = discord.utils.get(Guild.emojis, name='CYBTUBE')
+        Emoji_3 = discord.utils.get(Guild.emojis, name='PROGRAMMING')
+        Emoji_4 = discord.utils.get(Guild.emojis, name='CYBERPROFESSION')
+
+        #-------------------
+
+        check = News_Str['news']
+        Detail_SelOP_List = []
+
+        table = prettytable.PrettyTable()
+        table.field_names = ["CATEGORY", "DATE", "NEW FEATURE"]
+        table._max_widths = {"CATEGORY": 233, "DATE": 116, "NEW": 351}
+
+        HFile = discord.File("./img_folder/NewsHeader.png", filename="image.png")
+        HeaderEmbed = discord.Embed(
+            title=f'{user_name} News panel',
+            color=Color
+        )
+        HeaderEmbed.set_image(url='attachment://image.png')
+
+        for count in range(10):
+            try:
+                Detail_SelOP_List.append(
+                    discord.SelectOption(
+                        label=f'{count+1}. {check[count]["NEW"]}',
+                        value=count,
+                        description=f'Detail news of {check[count]["NEW"]}'
+                    )
+                )
+
+                char = check[count]['NEW']
+                if len(list(char)) > 15:
+                    holder = list(char)
+                    char = char[:11] + '...'
+                table.add_row([f'{check[count]["CATEGORY"]}', f'{check[count]["DATE"]}', f'{char}'])
+            except:
+                table.add_row([f'-', '-','-'])
+
+        class Detail_Panel(discord.ui.View):
+            def __init__(self):
+                super().__init__()
+                self.Index = 0
+
+            @discord.ui.select(placeholder='Detail',max_values=1,min_values=1,options=Detail_SelOP_List)
+            async def Details(self, interaction, select:discord.ui.Select):
+                await interaction.response.defer()
+                user = f_user
+                user_id = user.id
+                user_name = user.name
+                inter_id = interaction.user.id
+
+                if inter_id != user_id:
+                    await interaction.response.defer()
+                    await interaction.followup.send(
+                        content=f'Sorry This Menu is controlled by {user_name}',
+                        ephemeral=True
+                    )
+                    return inter_id == user_id
+
+                self.Index = int(self.Details.values[0])
+                HeaderImg = check[self.Index]["IMAGE"]
+
+                if HeaderImg == 'NONE':
+                    HFile = discord.File(f"./img_folder/NewsHeader.png", filename=f"Header.png")
+                    HeaderImg = 'attachment://Header.png'
+                else:
+                    HFile = discord.File(f"./img_folder/{HeaderImg}.png", filename=f"{HeaderImg}.png")
+                    HeaderImg = f'attachment://{HeaderImg}.png'
+
+                HeaderEmbed = discord.Embed(
+                    title=f'{user_name} News panel',
+                    color=Color
+                )
+                HeaderEmbed.set_image(url=HeaderImg)
+                Embed = discord.Embed(
+                    title=f'{check[self.Index]["NEW"]}',
+                    description=f'{check[self.Index]["DETAIL"]}',
+                    color=Color
+                )
+                Embed.set_image(url='https://cdn.discordapp.com/attachments/987680634694684712/1090189524241485825/Line.png')
+                Embed.set_footer(text=f'Executor : {user_name} | {Time}')
+
+                await interaction.followup.send(
+                    embeds=[HeaderEmbed, Embed],
+                    file=HFile,
+                    ephemeral=True
+                )
+
+
+        Embed = discord.Embed(
+            description=f'```{table.get_string()}```',
+            color=Color
+        )
+        Embed.set_image(url='https://cdn.discordapp.com/attachments/987680634694684712/1090189524241485825/Line.png')
+        Embed.set_footer(text=f'Executor : {user_name} | {Time}')
+
+        await interaction.followup.send(
+            embeds=[HeaderEmbed, Embed],
+            file=HFile,
+            view=Detail_Panel()
+        )
 #-------------------------------
 
 async def setup(bot):

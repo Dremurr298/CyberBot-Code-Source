@@ -8,7 +8,7 @@
                 {
                     "name":"start_guild_sync",
                     "Desc":"Sync all bot commands to the author server",
-                    "Usage":"cb.start_guild_sync"
+                    "Usage":"cb.sync | /sync"
                 }
             ]
         },
@@ -19,7 +19,7 @@
                 {
                     "name":"sync",
                     "Desc":"Synchronize the bot to get updates from the bot owner so that the command can appear/be visible in the guild where there are cyberbots",
-                    "Usage":"cb.sync"
+                    "Usage":"cb.owner_sync"
                 },
                 {
                     "name":"create_quest",
@@ -76,6 +76,11 @@
                     "name":"uptime",
                     "Desc":"See how long does the bot has online.",
                     "Usage":"/uptime"
+                },
+                {
+                    "name":"news",
+                    "Desc":"See a new update for CyberBots.",
+                    "Usage":"/news"
                 }
             ]
         },
@@ -107,6 +112,11 @@
                     "name":"reward",
                     "Desc":"Checking or claiming a hourly/daily/moonthly rewards.",
                     "Usage":"/reward {hourly/daily/moonthly -> None/Checking}"
+                },
+                {
+                    "name":"monetize",
+                    "Desc":"This command is used to monitize the cybertube user's account in order to make money while executing the /work command\n>>Monitize have requirements of 5,000 Csubs and 50,000 Views and can only be used once<<",
+                    "Usage":"/monitize"
                 },
                 {
                     "name":"level-up",

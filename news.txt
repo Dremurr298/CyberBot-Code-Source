@@ -1,0 +1,25 @@
+{
+    "news":[
+        {
+            "CATEGORY":"RELEASE",
+            "DETAIL":"> Today, I am happy to announce the release of my bot. Today, after more than a year of development, now you can invite this bot wherever you want on the discord server. I hope with the release of this discord bot can make many people have fun with this bot :)",
+            "DATE":"22/1/2023",
+            "NEW":"BOT ACCEPT ON TOP.GG",
+            "IMAGE":"NONE"
+        },
+        {
+            "CATEGORY":"BUG FIX-UPDATE",
+            "DETAIL":"> Fixing a little bugs and added new command",
+            "DATE":"24/1/2023",
+            "NEW":"/news",
+            "IMAGE":"NONE"
+        },
+        {
+            "CATEGORY":"UI UPDATE-BUG FIX",
+            "DETAIL":"> Added user-card image to '/account' command and a image header at 'news' command also fixing economy leaderboard bug which only show author instead real leaderboard",
+            "DATE":"29/3/2023",
+            "NEW":"NEW UI ON SOME COMMAND",
+            "IMAGE":"NONE"
+        }
+    ]
+}

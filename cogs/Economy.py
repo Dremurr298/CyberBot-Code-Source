@@ -19,6 +19,7 @@ q_cursor = db['Question_Data']
 s_cursor = db['Shop_Data']
 privguild = 979708145905594439
 color = 233087
+nl = "\n"
 
 #--------------------------------
 
@@ -354,6 +355,421 @@ async def get_card(data:dict=None, PFP_URL=None, name:str=None):
 	# base_background.close()
 
 	# return filename, f'./img_folder/{filename}'
+
+async def battle_card(data:list=None, PFP_URL:dict=None, name:dict=None):
+	buffer = io.BytesIO()
+	base_background = None
+	time_start = time.time()
+
+	# user + enemy name
+	user_name = str(name['User'])[0:7]
+	enemy_name = str(name['Enemy'])[0:7]
+
+	if len(user_name) >= 7:
+		user_name += "..."
+
+	if len(enemy_name) >= 7:
+		enemy_name += "..."
+
+	# getting user + enemy pfp
+	user_pfp = await get_image(PFP_URL['User_Pfp'])
+	enemy_pfp = await get_image(PFP_URL['EUser_Pfp'])
+
+	user_pfp = user_pfp.resize((153,153), resample=Image.Resampling.BILINEAR)
+	enemy_pfp = enemy_pfp.resize((160,160), resample=Image.Resampling.BILINEAR)
+
+	with Image.open("./img_folder/Battle_Background.png") as base_background, Image.open(f'./img_folder/PROGRESS_GRAY.png') as Gray_Line, Image.open(f'./img_folder/PROGRESS_RED.png') as Red_Line:
+		base_draw = ImageDraw.Draw(base_background)
+		Gray_Line = Gray_Line.resize((44, 44), resample=Image.Resampling.BILINEAR)
+		Red_Line = Red_Line.resize((44, 44), resample=Image.Resampling.BILINEAR)
+
+		base_background.paste(user_pfp, (65, 64), mask=user_pfp.convert('RGBA'))
+		base_background.paste(enemy_pfp, (1700, 60), mask=enemy_pfp.convert('RGBA'))
+
+		base_draw.text(
+			(240, 52), #x (-), y (|)
+			f"{user_name}",
+			font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 65),
+			fill=(255, 255, 255)
+		)
+
+		base_draw.text(
+			(1680, 115), #x (-), y (|)
+			f"{enemy_name}",
+			font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 63),
+			fill=(255, 255, 255),
+			anchor="rs"
+		)
+
+		u_img_pointer = 1
+		e_img_pointer = 1
+
+		for get in data[0]:
+			Computer_Name = get["Comp"]
+			Computer_CHealt = get["CHEALT"]
+			Computer_Healt = get["C_Hlt"]
+			Computer_Damage = f'{get["B_Dmg"]} - {get["M_Dmg"]}'
+			Computer_CritRt = get["C_Rte"]
+			Computer_CritDm = get["C_Dmg"]
+			Computer_Defs = get["B_Def"]
+			Computer_Level = get["C_Lvl"]
+			Computer_MLevel = get["C_Mlv"]
+
+			with Image.open(f"./img_folder/SideJobs_Img/PC/{Computer_Name}.png") as computer:
+				computer = computer.resize((250,250), resample=Image.Resampling.BILINEAR)
+				c_name_transform = Computer_Name.replace("_", " ")
+
+				Healt_Lenght = min(round((Computer_CHealt / Computer_Healt * 100) / 100 * 457), (457))
+				Saved_Lenght = Healt_Lenght # SAVING FOR ANOTHER CALCULATION
+
+				if Healt_Lenght <= 25:
+					Healt_Lenght = 25
+
+				if u_img_pointer == 1:
+					base_background.paste(computer, (60, 250), mask=computer.convert("RGBA"))
+					base_draw.text(
+						(310, 300), #x (-), y (|)
+						c_name_transform,
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 30),
+						fill=(255, 255, 255)
+					)
+
+					base_background.paste(Gray_Line, (740, 263), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(303, 284, 760, 284), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(115, 115, 115),
+						width=44
+					)
+
+					base_background.paste(Red_Line, (((303 + Healt_Lenght)-20), 263), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(303, 284, (303+ Healt_Lenght), 284), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(255, 22, 85),
+						width=44
+					)
+
+					base_draw.text(
+						(310, 257), #x (-), y (|)
+						f"{Computer_CHealt}/{Computer_Healt} HP",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 38),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(400, 381), #x (-), y (|)
+						f"{Computer_Damage} DMG",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(640, 381), #x (-), y (|)
+						f"{Computer_Defs} DEF",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(398, 455), #x (-), y (|)
+						f"{Computer_CritDm}% CDMG - {Computer_CritRt}% CR",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 15),
+						fill=(255, 255, 255)
+					)
+
+				elif u_img_pointer == 2:
+					base_background.paste(computer, (60, 500), mask=computer.convert("RGBA"))
+					base_draw.text(
+						(310, 564), #x (-), y (|)
+						c_name_transform,
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 30),
+						fill=(255, 255, 255)
+					)
+
+					base_background.paste(Gray_Line, (740, 527), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(303, 548, 760, 548), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(115, 115, 115),
+						width=44
+					)
+
+					base_background.paste(Red_Line, (((303 + Healt_Lenght)-20), 527), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(303, 548, (303 + Healt_Lenght), 548), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(255, 22, 85),
+						width=44
+					)
+
+					base_draw.text(
+						(310, 520), #x (-), y (|)
+						f"{Computer_CHealt}/{Computer_Healt} HP",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 38),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(400, 640), #x (-), y (|)
+						f"{Computer_Damage} DMG",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(640, 640), #x (-), y (|)
+						f"{Computer_Defs} DEF",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(398, 715), #x (-), y (|)
+						f"{Computer_CritDm}% CDMG - {Computer_CritRt}% CR",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 15),
+						fill=(255, 255, 255)
+					)
+				
+				else:
+					base_background.paste(computer, (60, 780), mask=computer.convert("RGBA"))
+					base_draw.text(
+						(310, 828), #x (-), y (|)
+						c_name_transform,
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 30),
+						fill=(255, 255, 255)
+					)
+
+					base_background.paste(Gray_Line, (740, 790), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(303, 811, 760, 811), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(115, 115, 115),
+						width=44
+					)
+
+					base_background.paste(Red_Line, (((303 + Healt_Lenght)-20), 790), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(303, 811, (303 + Healt_Lenght), 811), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(255, 22, 85),
+						width=44
+					)
+
+					base_draw.text(
+						(310, 785), #x (-), y (|)
+						f"{Computer_CHealt}/{Computer_Healt} HP",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 38),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(400, 908), #x (-), y (|)
+						f"{Computer_Damage} DMG",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(640, 908), #x (-), y (|)
+						f"{Computer_Defs} DEF",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255)
+					)
+
+					base_draw.text(
+						(398, 983), #x (-), y (|)
+						f"{Computer_CritDm}% CDMG - {Computer_CritRt}% CR",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 15),
+						fill=(255, 255, 255)
+					)
+
+			u_img_pointer += 1
+
+		for get in data[1]:
+			Computer_Name = get["Comp"]
+			Computer_CHealt = get["CHEALT"]
+			Computer_Healt = get["C_Hlt"]
+			Computer_Damage = f'{get["B_Dmg"]} - {get["M_Dmg"]}'
+			Computer_CritRt = get["C_Rte"]
+			Computer_CritDm = get["C_Dmg"]
+			Computer_Defs = get["B_Def"]
+			Computer_Level = get["C_Lvl"]
+			Computer_MLevel = get["C_Mlv"]
+
+			with Image.open(f"./img_folder/SideJobs_Img/PC/{Computer_Name}.png") as computer:
+				computer = computer.resize((250,250), resample=Image.Resampling.BILINEAR)
+				c_name_transform = Computer_Name.replace("_", " ")
+
+				Healt_Lenght = min(round((Computer_CHealt / Computer_Healt * 100) / 100 * 500), (500))
+				Saved_Lenght = Healt_Lenght # SAVING FOR ANOTHER CALCULATION
+
+				if Healt_Lenght <= 25:
+					Healt_Lenght = 25
+
+				if e_img_pointer == 1:
+					base_background.paste(computer, (1610, 250), mask=computer.convert("RGBA"))
+					base_draw.text(
+						(1360, 300), #x (-), y (|)
+						c_name_transform,
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 30),
+						fill=(255, 255, 255)
+					)
+
+					base_background.paste(Gray_Line, ((1115-20), 263), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(1115, 284, 1615, 284), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(115, 115, 115),
+						width=44
+					)
+
+					base_background.paste(Red_Line, (((1615 - Healt_Lenght) - 20), 263), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						((1615 - Healt_Lenght), 284, 1615, 284), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(255, 22, 85),
+						width=44
+					)
+
+					base_draw.text(
+						(1605, 298), #x (-), y (|)
+						f"{Computer_CHealt}/{Computer_Healt} HP",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 38),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1515, 400), #x (-), y (|)
+						f"{Computer_Damage} DMG",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1250, 403), #x (-), y (|)
+						f"{Computer_Defs} DEF",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1515, 473), #x (-), y (|)
+						f"{Computer_CritDm}% CDMG - {Computer_CritRt}% CR",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 15),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+				elif e_img_pointer == 2:
+					base_background.paste(computer, (1610, 500), mask=computer.convert("RGBA"))
+					base_draw.text(
+						(1360, 564), #x (-), y (|)
+						c_name_transform,
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 30),
+						fill=(255, 255, 255)
+					)
+
+					base_background.paste(Gray_Line, ((1115-20), 527), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(1115, 548, 1615, 548), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(115, 115, 115),
+						width=44
+					)
+
+					base_background.paste(Red_Line, (((1615 - Healt_Lenght) - 20), 527), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						((1615 - Healt_Lenght), 548, 1615, 548), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(255, 22, 85),
+						width=44
+					)
+
+					base_draw.text(
+						(1607, 563), #x (-), y (|)
+						f"{Computer_CHealt}/{Computer_Healt} HP",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 38),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1515, 660), #x (-), y (|)
+						f"{Computer_Damage} DMG",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1250, 663), #x (-), y (|)
+						f"{Computer_Defs} DEF",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1515, 733), #x (-), y (|)
+						f"{Computer_CritDm}% CDMG - {Computer_CritRt}% CR",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 15),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+				
+				else:
+					base_background.paste(computer, (1610, 780), mask=computer.convert("RGBA"))
+					base_draw.text(
+						(1360, 828), #x (-), y (|)
+						c_name_transform,
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 30),
+						fill=(255, 255, 255)
+					)
+
+					base_background.paste(Gray_Line, ((1115 - 20), 790), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						(1115, 811, 1615, 811), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(115, 115, 115),
+						width=44
+					)
+
+					base_background.paste(Red_Line, (((1615 - Healt_Lenght) - 20), 790), mask=Gray_Line.convert('RGBA'))
+					base_draw.line(
+						((1615 - Healt_Lenght), 811, 1615, 811), # X Y X Y (-) (|) (-) (|) OR FIRST POINT => REACH POINT
+						fill=(255, 22, 85),
+						width=44
+					)
+
+					base_draw.text(
+						(1605, 828), #x (-), y (|)
+						f"{Computer_CHealt}/{Computer_Healt} HP",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 38),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1515, 923), #x (-), y (|)
+						f"{Computer_Damage} DMG",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1260, 926), #x (-), y (|)
+						f"{Computer_Defs} DEF",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 22),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+					base_draw.text(
+						(1520, 995), #x (-), y (|)
+						f"{Computer_CritDm}% CDMG - {Computer_CritRt}% CR",
+						font=ImageFont.truetype('font/OpenSans-ExtraBold.ttf', 15),
+						fill=(255, 255, 255),
+						anchor="rs"
+					)
+
+			e_img_pointer += 1
+		
+		base_background.save(buffer, format='png')
+		return [buffer.getvalue(), f"{round(time.time() - time_start)}s"]
 
 #--------------------------------
 
@@ -1455,7 +1871,7 @@ class Economy_Cmd(commands.Cog):
 				)
 
 	@app_commands.command(name='bal')
-	async def bal(self, interaction: discord.Interaction, user:discord.Member=None):
+	async def bal(self, interaction: discord.Interaction, user:discord.User=None):
 		"""Checking your CyberMoney or someone else CyberMoney"""
 		await interaction.response.defer()
 
@@ -3054,6 +3470,195 @@ class Economy_Cmd(commands.Cog):
 					app_commands.Choice(name='Subs Booster',value='S_Booster'),
 					app_commands.Choice(name='Viewer Increaser',value='V_Boost')
 				]
+
+	@app_commands.command(name="battle")
+	async def TESTING_BATTLE(self, interaction:discord.Interaction, User:discord.User=None):
+		"""Hacking Computer Battle Between Player!"""
+		await interaction.response.defer()
+
+		user = interaction.user
+		user_id = user.id
+		user_pfp = user.display_avatar.url
+		user_name = user.name
+
+		#----------
+
+		Guild = self.bot.get_guild(privguild)
+
+		Emoji_1 = discord.utils.get(Guild.emojis, name='CYBUSER')
+		Emoji_2 = discord.utils.get(Guild.emojis, name='CYBERTUBE')
+		Emoji_3 = discord.utils.get(Guild.emojis, name='CYBSUBS')
+		Emoji_4 = discord.utils.get(Guild.emojis, name='CYBERVIEW')
+		Emoji_5 = discord.utils.get(Guild.emojis, name='CYBLIKE')
+		Emoji_6 = discord.utils.get(Guild.emojis, name='CYBDISLIKE')
+		Emoji_7 = discord.utils.get(Guild.emojis, name='CYBMONEY')
+		Emoji_8 = discord.utils.get(Guild.emojis, name='CYBERPROFESSION')
+		Emoji_9 = discord.utils.get(Guild.emojis, name='CYBEXP')
+
+		#----------
+
+		check = cursor.find_one({'id':user_id})
+		Time = datetime.datetime.now()
+
+		if check is None:
+			Embed = discord.Embed(
+				title=f'{Emoji_1} | Command Failed',
+				description=f'> Sorry {user_name}. you`re not create an account yet.\n> Please Create an account with command ***/start!***',
+				color=color
+			)
+			Embed.set_footer(text=f'Executor : {user_name} | {Time}')
+			Embed.set_thumbnail(url=user_pfp)
+			return await interaction.followup.send(embed=Embed)
+
+		#----------
+
+		if User == None:
+			ENEMY = list(cursor.find({}))
+			SELECTOR = None
+
+			for holder in ENEMY:
+				SELECTOR = random.choice(ENEMY)
+				if SELECTOR["id"] != user_id:
+					break
+
+			ENEMY = SELECTOR
+			ENEMY_USER = self.bot.get_user(ENEMY["id"])
+			ENEMY_NAME = ENEMY_USER.name
+			ENEMY_PFP = ENEMY_USER.display_avatar.url
+
+		else:
+			ENEMY = cursor.find_one({"id":User.id})
+
+			if ENEMY is None:
+				Embed = discord.Embed(
+					title=f'{Emoji_1} | Command Failed',
+					description=f"> Can't start the battle because {User.name} didn't have CyberAccount!",
+					color=color
+				)
+				Embed.set_footer(text=f'Executor : {user_name} | {Time}')
+				Embed.set_thumbnail(url=User.display_avatar.url)
+				return await interaction.followup.send(embed=Embed)
+
+			ENEMY_NAME = User.name
+			ENEMY_PFP = User.display_avatar.url
+
+		#----------
+
+		USER_PARTY = check["SJ-DATA"]["COMP_PRTY"]
+		ENEM_PARTY = ENEMY["SJ-DATA"]["COMP_PRTY"]
+
+		UComp_Select = []
+		EComp_Select = []
+
+		UComp_List = []
+		EComp_List = []
+
+		Ucount = 0
+		Ecount = 0
+
+		#----------
+
+		for loop_hold in range(3):
+
+			try:
+				USER_PARTY[Ucount]["CHEALT"] = USER_PARTY[Ucount]["C_Hlt"]
+				UComp_Select.append(discord.SelectOption(
+					label = f"{USER_PARTY[Ucount]['Comp']} | USER",
+					description = f"Select {USER_PARTY[Ucount]['Comp'].replace('_', ' ')} To Do Action",
+					value = f"U{Ucount}"
+				))
+				UComp_List.append(f'> [] | {USER_PARTY[Ucount]["Comp"]} - <SU{Ucount}>')
+
+			except:
+				UComp_Select.append(discord.SelectOption(
+					label = f"NONE",
+					description = f"NONE",
+					value = f"U{Ucount}"
+				))
+				UComp_List.append(f'> [] | NONE - <SU{Ecount}>')
+
+			Ucount += 1
+
+		for loop_hold in range(3):
+			try:
+				ENEM_PARTY[Ecount]["CHEALT"] = ENEM_PARTY[Ecount]["C_Hlt"]
+				EComp_Select.append(discord.SelectOption(
+					label = f"{USER_PARTY[Ecount]['Comp']} | ENEMY",
+					description = f"Select {ENEM_PARTY[Ecount]['Comp'].replace('_', ' ')} To Be Attacked",
+					value = f"E{Ecount}"
+				))
+				EComp_List.append(f'> [] | {ENEM_PARTY[Ecount]["Comp"]} - <SE{Ecount}>')
+
+			except:
+				EComp_Select.append(discord.SelectOption(
+					label = f"NONE",
+					description = f"NONE",
+					value = f"E{Ecount}"
+				))
+				EComp_List.append(f'> [] | NONE - <SE{Ucount}>')
+
+			Ecount += 1
+
+		Image_Procces = await battle_card(
+			[USER_PARTY, ENEM_PARTY],
+			{"User_Pfp":user_pfp, "EUser_Pfp":ENEMY_PFP},
+			{"User":user_name,"Enemy":ENEMY_NAME}
+		)
+
+		class Menu(discord.ui.View):
+			def __init__(self):
+				super().__init__()
+				self.current_turn = 0
+
+			@ui.select(placeholder='USER COMPUTER', max_values=3, min_values=1, options=UComp_Select)
+			async def u_computer_callback(self, interaction, select:discord.ui.Select):
+				await interaction.response.defer()
+				await interaction.followup.send(content="IN DEV", ephemeral=True)
+
+			@ui.select(placeholder='ENEMY COMPUTER', max_values=3, min_values=1, options=EComp_Select)
+			async def e_computer_callback(self, interaction, select:discord.ui.Select):
+				await interaction.response.defer()
+				await interaction.followup.send(content="IN DEV", ephemeral=True)
+
+			@ui.button(label="⚔️ | ATK", style=discord.ButtonStyle.green)
+			async def attack_button(self, interaction, button: ui.Button):
+				await interaction.response.defer()
+				await interaction.followup.send(content="IN DEV", ephemeral=True)
+
+			@ui.button(label="🛡️ | DEF", style=discord.ButtonStyle.blurple)
+			async def defense_button(self, interaction, button: ui.Button):
+				await interaction.response.defer()
+				await interaction.followup.send(content="IN DEV", ephemeral=True)
+
+			@ui.button(label="🏳️ | OUT", style=discord.ButtonStyle.red)
+			async def surrender_button(self, interaction, button: ui.Button):
+				await interaction.response.defer()
+				await interaction.followup.send(content="IN DEV", ephemeral=True)			
+
+			async def on_timeout(self):
+				pass
+
+		Send_Image = discord.File(fp=io.BytesIO(Image_Procces[0]), filename=f'{user_name}_battle.png')
+		Embed = discord.Embed(
+			title=f"{user_name} CyberHack Battle",
+			description=(
+				f"> **{user_name}'s' Computer :**{nl}"
+				f"{nl.join(UComp_List)}{nl}{nl}"
+				f"> **{ENEMY_NAME}'s' Computer :**{nl}"
+				f"{nl.join(EComp_List)}{nl}{nl}"
+				f"```<Battle Message>```"
+			),
+			color=color
+		)
+		Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+		Embed.set_image(url=f'attachment://{user_name}_battle.png')
+		Embed.set_thumbnail(url=user_pfp)
+
+		await interaction.followup.send(
+			file=Send_Image,
+			embed=Embed,
+			view=Menu()
+		)
 
 async def setup(bot):
 	await bot.add_cog(Economy_Cmd(bot))

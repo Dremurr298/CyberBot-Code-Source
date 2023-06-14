@@ -24,22 +24,16 @@ class MyBot(commands.Bot):
                 await bot.load_extension(f'cogs.{filename[:-3]}')
 
     async def on_ready(self):
-        All_Members = bot.get_all_members()
+        All_Members = len(list(bot.get_all_members()))
         All_Guilds = bot.guilds
-        Count = 0
-
-        for x in All_Members:
-            Count += 1
         
         await bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name=f"{Count} Members & {len(All_Guilds)} Server!"
+                name=f"{All_Members} Members & {len(All_Guilds)} Server!"
             )
         )
-
-        print(f'[Logs] Message : Bot is running...\n[Logs] Connection : {int(bot.latency*1000)}ms\n[Logs] Member_Count : {Count}\n[Logs] Guild_count : {drawbar(len(All_Guilds), 15, 100)} | {len(All_Guilds)}')
-        print(All_Guilds)
+        print(f'[Logs] Message : Bot is running...\n[Logs] Connection : {int(bot.latency*1000)}ms\n[Logs] Member_Count : {All_Members}\n[Logs] Guild_count : {drawbar(len(All_Guilds), 15, 100)} | {len(All_Guilds)}')
     
     async def on_guild_join(self, guild):
         try:

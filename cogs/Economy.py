@@ -3523,8 +3523,14 @@ class Economy_Cmd(commands.Cog):
 
 			ENEMY = SELECTOR
 			ENEMY_USER = self.bot.get_user(ENEMY["id"])
-			ENEMY_NAME = ENEMY_USER.name
-			ENEMY_PFP = ENEMY_USER.display_avatar.url
+
+			if ENEMY_USER != None:
+				ENEMY_NAME = ENEMY_USER.name
+				ENEMY_PFP = ENEMY_USER.display_avatar.url
+
+			else:
+				ENEMY_NAME = SELECTOR["name"]
+				ENEMY_PFP = "https://cdn.discordapp.com/attachments/979708146421489706/1118458604291362816/OIP.jpg"
 
 		else:
 			ENEMY = cursor.find_one({"id":User.id})
@@ -3573,9 +3579,9 @@ class Economy_Cmd(commands.Cog):
 				UComp_Select.append(discord.SelectOption(
 					label = f"NONE",
 					description = f"NONE",
-					value = f"U{Ucount}"
+					value = f"None {Ucount}"
 				))
-				UComp_List.append(f'> [] | NONE - <SU{Ecount}>')
+				UComp_List.append(f'> [] | NONE - <SU{Ucount}>')
 
 			Ucount += 1
 
@@ -3593,9 +3599,9 @@ class Economy_Cmd(commands.Cog):
 				EComp_Select.append(discord.SelectOption(
 					label = f"NONE",
 					description = f"NONE",
-					value = f"E{Ecount}"
+					value = f"None {Ecount}"
 				))
-				EComp_List.append(f'> [] | NONE - <SE{Ucount}>')
+				EComp_List.append(f'> [] | NONE - <SE{Ecount}>')
 
 			Ecount += 1
 
@@ -3610,30 +3616,147 @@ class Economy_Cmd(commands.Cog):
 				super().__init__()
 				self.current_turn = 0
 
+				self.current_user_selected = []
+				self.current_enmy_selected = []
+				self.battle_current_mssage = []
+
+				self.default_description = (
+					f"> **{user_name}'s' Computer :**{nl}"
+					f"{nl.join(UComp_List)}{nl}{nl}"
+					f"> **{ENEMY_NAME}'s' Computer :**{nl}"
+					f"{nl.join(EComp_List)}{nl}{nl}"
+					f"```diff{nl}<Battle Message>```"
+				)
+
+				self.based_turn_descript = None
+
 			@ui.select(placeholder='USER COMPUTER', max_values=3, min_values=1, options=UComp_Select)
 			async def u_computer_callback(self, interaction, select:discord.ui.Select):
+				interid = interaction.user.id
+
+				if interid != user_id:
+					await interaction.response.defer()
+					await interaction.followup.send(
+						content=f'Sorry, this menu is controlled by {user.name}!',
+						ephemeral=True
+					)
+					return interid == user_id
+
 				await interaction.response.defer()
-				await interaction.followup.send(content="IN DEV", ephemeral=True)
+				if self.based_turn_descript == None:
+					Desc_Holder = self.default_description
+				else:
+					Desc_Holder = self.based_turn_descript
+
+				for get in range(0, (len(select.values)-1)):
+					curr = select.values[get].split()[0]
+					if curr != "None":
+						self.current_user_selected.append(select.values[get])
+						self.battle_current_mssage.append(f"+ {user_name} SELECTING PC {select.values[get]}")
+						Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", "**SELECTED**")
+
+				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage)}")
+				Embed = discord.Embed(
+					title=f"{user_name} CyberHack Battle",
+					description=Desc_Holder,
+					color=color
+				)
+				Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+				Embed.set_image(url=f'attachment://{user_name}_battle.png')
+				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage)}", "<Battle Message>")
+				await interaction.edit_original_message(embed=Embed)
 
 			@ui.select(placeholder='ENEMY COMPUTER', max_values=3, min_values=1, options=EComp_Select)
 			async def e_computer_callback(self, interaction, select:discord.ui.Select):
+				interid = interaction.user.id
+
+				if interid != user_id:
+					await interaction.response.defer()
+					await interaction.followup.send(
+						content=f'Sorry, this menu is controlled by {user.name}!',
+						ephemeral=True
+					)
+					return interid == user_id
+
 				await interaction.response.defer()
-				await interaction.followup.send(content="IN DEV", ephemeral=True)
+				if self.based_turn_descript == None:
+					Desc_Holder = self.default_description
+				else:
+					Desc_Holder = self.based_turn_descript
+
+				for get in range(0, (len(select.values)-1)):
+					curr = select.values[get].split()[0]
+					if curr != "None":
+						self.current_user_selected.append(select.values[get])
+						self.battle_current_mssage.append(f"- {user_name} TARGETTING PC {select.values[get]}")
+						Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", "**SELECTED**")
+
+				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage)}")
+				Embed = discord.Embed(
+					title=f"{user_name} CyberHack Battle",
+					description=Desc_Holder,
+					color=color
+				)
+				Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+				Embed.set_image(url=f'attachment://{user_name}_battle.png')
+				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage)}", "<Battle Message>")
+				await interaction.edit_original_message(embed=Embed)
 
 			@ui.button(label="⚔️ | ATK", style=discord.ButtonStyle.green)
 			async def attack_button(self, interaction, button: ui.Button):
+				interid = interaction.user.id
+
+				if interid != user_id:
+					await interaction.response.defer()
+					await interaction.followup.send(
+						content=f'Sorry, this menu is controlled by {user.name}!',
+						ephemeral=True
+					)
+					return interid == user_id
+
 				await interaction.response.defer()
-				await interaction.followup.send(content="IN DEV", ephemeral=True)
 
 			@ui.button(label="🛡️ | DEF", style=discord.ButtonStyle.blurple)
 			async def defense_button(self, interaction, button: ui.Button):
+				interid = interaction.user.id
+
+				if interid != user_id:
+					await interaction.response.defer()
+					await interaction.followup.send(
+						content=f'Sorry, this menu is controlled by {user.name}!',
+						ephemeral=True
+					)
+					return interid == user_id
+
 				await interaction.response.defer()
-				await interaction.followup.send(content="IN DEV", ephemeral=True)
 
 			@ui.button(label="🏳️ | OUT", style=discord.ButtonStyle.red)
 			async def surrender_button(self, interaction, button: ui.Button):
+				interid = interaction.user.id
+
+				if interid != user_id:
+					await interaction.response.defer()
+					await interaction.followup.send(
+						content=f'Sorry, this menu is controlled by {user.name}!',
+						ephemeral=True
+					)
+					return interid == user_id
+
 				await interaction.response.defer()
-				await interaction.followup.send(content="IN DEV", ephemeral=True)			
+
+			@ui.button(label="☑️ | END TURN", style=discord.ButtonStyle.blurple)
+			async def end_turn_button(self, interaction, button:ui.Button):
+				interid = interaction.user.id
+
+				if interid != user_id:
+					await interaction.response.defer()
+					await interaction.followup.send(
+						content=f'Sorry, this menu is controlled by {user.name}!',
+						ephemeral=True
+					)
+					return interid == user_id
+
+				await interaction.response.defer()
 
 			async def on_timeout(self):
 				pass
@@ -3646,7 +3769,7 @@ class Economy_Cmd(commands.Cog):
 				f"{nl.join(UComp_List)}{nl}{nl}"
 				f"> **{ENEMY_NAME}'s' Computer :**{nl}"
 				f"{nl.join(EComp_List)}{nl}{nl}"
-				f"```<Battle Message>```"
+				f"```diff{nl}<Battle Message>{nl}```"
 			),
 			color=color
 		)

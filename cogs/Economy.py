@@ -3553,6 +3553,12 @@ class Economy_Cmd(commands.Cog):
 		USER_PARTY = check["SJ-DATA"]["COMP_PRTY"]
 		ENEM_PARTY = ENEMY["SJ-DATA"]["COMP_PRTY"]
 
+		for comp_hold in  USER_PARTY:
+			comp_hold["CHEALT"] = comp_hold["C_Hlt"]
+
+		for enemy_comp_hold in  ENEM_PARTY:
+			enemy_comp_hold["CHEALT"] = enemy_comp_hold["C_Hlt"]
+
 		UComp_Select = []
 		EComp_Select = []
 
@@ -3564,46 +3570,42 @@ class Economy_Cmd(commands.Cog):
 
 		#----------
 
-		for loop_hold in range(3):
+		for U_loop_hold in range(3):
 
 			try:
-				USER_PARTY[Ucount]["CHEALT"] = USER_PARTY[Ucount]["C_Hlt"]
+				USER_PARTY[Ucount]["CHEALT"] = USER_PARTY[U_loop_hold]["C_Hlt"]
 				UComp_Select.append(discord.SelectOption(
-					label = f"{USER_PARTY[Ucount]['Comp']} | USER",
-					description = f"Select {USER_PARTY[Ucount]['Comp'].replace('_', ' ')} To Do Action",
-					value = f"U{Ucount}"
+					label = f"{USER_PARTY[U_loop_hold]['Comp']} | USER",
+					description = f"Select {USER_PARTY[U_loop_hold]['Comp'].replace('_', ' ')} To Do Action",
+					value = f"U{U_loop_hold}"
 				))
-				UComp_List.append(f'> [] | {USER_PARTY[Ucount]["Comp"]} - <SU{Ucount}>')
+				UComp_List.append(f'> [] | {USER_PARTY[U_loop_hold]["Comp"]} - <SU{U_loop_hold}>')
 
 			except:
 				UComp_Select.append(discord.SelectOption(
 					label = f"NONE",
 					description = f"NONE",
-					value = f"None {Ucount}"
+					value = f"None {U_loop_hold}"
 				))
-				UComp_List.append(f'> [] | NONE - <SU{Ucount}>')
+				UComp_List.append(f'> [] | NONE - <SU{U_loop_hold}>')
 
-			Ucount += 1
-
-		for loop_hold in range(3):
+		for E_loop_hold in range(3):
 			try:
-				ENEM_PARTY[Ecount]["CHEALT"] = ENEM_PARTY[Ecount]["C_Hlt"]
+				ENEM_PARTY[Ecount]["CHEALT"] = ENEM_PARTY[E_loop_hold]["C_Hlt"]
 				EComp_Select.append(discord.SelectOption(
-					label = f"{USER_PARTY[Ecount]['Comp']} | ENEMY",
-					description = f"Select {ENEM_PARTY[Ecount]['Comp'].replace('_', ' ')} To Be Attacked",
-					value = f"E{Ecount}"
+					label = f"{USER_PARTY[E_loop_hold]['Comp']} | ENEMY",
+					description = f"Select {ENEM_PARTY[E_loop_hold]['Comp'].replace('_', ' ')} To Be Attacked",
+					value = f"E{E_loop_hold}"
 				))
-				EComp_List.append(f'> [] | {ENEM_PARTY[Ecount]["Comp"]} - <SE{Ecount}>')
+				EComp_List.append(f'> [] | {ENEM_PARTY[E_loop_hold]["Comp"]} - <SE{E_loop_hold}>')
 
 			except:
 				EComp_Select.append(discord.SelectOption(
 					label = f"NONE",
 					description = f"NONE",
-					value = f"None {Ecount}"
+					value = f"None {E_loop_hold}"
 				))
-				EComp_List.append(f'> [] | NONE - <SE{Ecount}>')
-
-			Ecount += 1
+				EComp_List.append(f'> [] | NONE - <SE{E_loop_hold}>')
 
 		Image_Procces = await battle_card(
 			[USER_PARTY, ENEM_PARTY],
@@ -3621,14 +3623,19 @@ class Economy_Cmd(commands.Cog):
 				self.battle_current_mssage = []
 
 				self.default_description = (
-					f"> **{user_name}'s' Computer :**{nl}"
+					f"> **{user_name}'s Computer :**{nl}"
 					f"{nl.join(UComp_List)}{nl}{nl}"
-					f"> **{ENEMY_NAME}'s' Computer :**{nl}"
+					f"> **{ENEMY_NAME}'s Computer :**{nl}"
 					f"{nl.join(EComp_List)}{nl}{nl}"
 					f"```diff{nl}<Battle Message>```"
 				)
 
 				self.based_turn_descript = None
+				self.current_turn_action = []
+				self.turn_done = []
+
+				self.UComputer_Destroyed = []
+				self.EComputer_Destroyed = []
 
 			@ui.select(placeholder='USER COMPUTER', max_values=3, min_values=1, options=UComp_Select)
 			async def u_computer_callback(self, interaction, select:discord.ui.Select):
@@ -3648,14 +3655,30 @@ class Economy_Cmd(commands.Cog):
 				else:
 					Desc_Holder = self.based_turn_descript
 
-				for get in range(0, (len(select.values)-1)):
+				for get in range(len(select.values)):
 					curr = select.values[get].split()[0]
 					if curr != "None":
-						self.current_user_selected.append(select.values[get])
-						self.battle_current_mssage.append(f"+ {user_name} SELECTING PC {select.values[get]}")
-						Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", "**SELECTED**")
+						if curr not in self.current_user_selected and curr not in self.turn_done and curr not in self.UComputer_Destroyed:
+							self.current_user_selected.append(select.values[get])
+							self.battle_current_mssage.append(f"+ {user_name} SELECTING PC <{select.values[get]}>")
+							Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", f"**SELECTED-{select.values[get]}**")
 
-				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage)}")
+						elif (curr in self.current_user_selected) or (curr in self.current_user_selected and curr in self.turn_done) or (curr in self.UComputer_Destroyed):
+							self.current_user_selected.remove(f"{select.values[get]}")
+							self.battle_current_mssage.append(f"+ {user_name} UN-SELECTING PC {select.values[get]}")
+							Desc_Holder = Desc_Holder.replace(f"**SELECTED-{select.values[get]}**", f"S{select.values[get]}")
+
+						elif (curr not in self.current_user_selected and curr in self.turn_done):
+							self.battle_current_mssage.append(
+								f"+ {user_name} SELECTING PC <{select.values[get]}> But Failed. Because the PC has been used before"
+							)
+
+						elif (curr not in self.current_user_selected and curr in self.UComputer_Destroyed):
+							self.battle_current_mssage.append(
+								f"+ {user_name} SELECTING PC <{select.values[get]}> But Failed. Because the PC has been destyoyed"
+							)							
+
+				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
 				Embed = discord.Embed(
 					title=f"{user_name} CyberHack Battle",
 					description=Desc_Holder,
@@ -3663,10 +3686,10 @@ class Economy_Cmd(commands.Cog):
 				)
 				Embed.set_footer(text=f"Executor : {user_name} | {Time}")
 				Embed.set_image(url=f'attachment://{user_name}_battle.png')
-				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage)}", "<Battle Message>")
+				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage[-5:])}", "<Battle Message>")
 				await interaction.edit_original_message(embed=Embed)
 
-			@ui.select(placeholder='ENEMY COMPUTER', max_values=3, min_values=1, options=EComp_Select)
+			@ui.select(placeholder='ENEMY COMPUTER', max_values=1, min_values=1, options=EComp_Select)
 			async def e_computer_callback(self, interaction, select:discord.ui.Select):
 				interid = interaction.user.id
 
@@ -3684,14 +3707,25 @@ class Economy_Cmd(commands.Cog):
 				else:
 					Desc_Holder = self.based_turn_descript
 
-				for get in range(0, (len(select.values)-1)):
+				for get in range(len(select.values)):
 					curr = select.values[get].split()[0]
 					if curr != "None":
-						self.current_user_selected.append(select.values[get])
-						self.battle_current_mssage.append(f"- {user_name} TARGETTING PC {select.values[get]}")
-						Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", "**SELECTED**")
+						if curr not in self.current_enmy_selected and curr not in self.EComputer_Destroyed:
+							self.current_enmy_selected.append(select.values[get])
+							self.battle_current_mssage.append(f"- {user_name} TARGETTING PC <{select.values[get]}>")
+							Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", "**TARGETTED**")
 
-				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage)}")
+						elif (curr in self.current_enmy_selected) or (curr in self.current_enmy_selected and curr in self.EComputer_Destroyed):
+							self.current_enmy_selected.remove(f"{select.values[get]}")
+							self.battle_current_mssage.append(f"- {user_name} UN-TARGETTING PC {select.values[get]}")
+							Desc_Holder = Desc_Holder.replace(f"**TARGETTED**", f"S{select.values[get]}")
+
+						elif (curr not in self.current_enmy_selected and curr in self.EComputer_Destroyed):
+							self.battle_current_mssage.append(
+								f"+ {user_name} TARGETTING PC <{select.values[get]}> But Failed. Because the enemy PC has been destyoyed"
+							)							
+
+				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
 				Embed = discord.Embed(
 					title=f"{user_name} CyberHack Battle",
 					description=Desc_Holder,
@@ -3699,7 +3733,7 @@ class Economy_Cmd(commands.Cog):
 				)
 				Embed.set_footer(text=f"Executor : {user_name} | {Time}")
 				Embed.set_image(url=f'attachment://{user_name}_battle.png')
-				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage)}", "<Battle Message>")
+				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage[-5:])}", "<Battle Message>")
 				await interaction.edit_original_message(embed=Embed)
 
 			@ui.button(label="⚔️ | ATK", style=discord.ButtonStyle.green)
@@ -3715,6 +3749,108 @@ class Economy_Cmd(commands.Cog):
 					return interid == user_id
 
 				await interaction.response.defer()
+
+				if len(self.current_user_selected) <= 0 or len(self.current_enmy_selected) <= 0:
+					return await interaction.followup.send(
+						content=f"{user_name} Please Select Your Pc and Enemy Pc To Do The Action!",
+						ephemeral=True
+					)
+
+				for get in range(len(self.current_user_selected)):
+					if self.current_user_selected[get] not in self.turn_done:
+						self.current_turn_action.append(
+							[self.current_user_selected[get], "ATTACK", self.current_enmy_selected[0], False]
+						)
+
+				Attack_States = None
+				for holder_loops in range(len(self.current_turn_action)):
+					states = self.current_turn_action[holder_loops][3]
+
+					if states != True and self.current_turn_action[holder_loops][1] == "ATTACK":
+						E_ids = int(self.current_enmy_selected[0].replace("E", ""))
+						ids = int(self.current_turn_action[holder_loops][0].replace('U', ''))
+
+						Attack_Message = f"+ {user_name} Hacking {ENEMY_NAME} PC <{E_ids}> And Dealt " + "{DMG_HOLDER} {DAMAGE_TYPE}!"
+
+						# ATTACKER SECTION
+
+						Computer = USER_PARTY[ids]["Comp"]
+						Current_Healt = USER_PARTY[ids]["CHEALT"]
+
+						Start_Damage = USER_PARTY[ids]["B_Dmg"]
+						End_Damage = USER_PARTY[ids]["M_Dmg"]
+
+						Crit_Rate = USER_PARTY[ids]["C_Rte"]
+						Crit_Damage = USER_PARTY[ids]["C_Dmg"]
+
+						# Generating Random Attack Damage (NO C-RATE / C-DMG)
+						Damage_Base = random.randint(Start_Damage, End_Damage)
+						Attack_Message = Attack_Message.replace("{DAMAGE_TYPE}", f"Virus Damage")
+
+						# Generating Crit-Damage
+						Crit_Rolls = random.randint(1, 100)
+						if not Crit_Rate < Crit_Rolls:
+							Damage_Base = int(Damage_Base + (Crit_Damage / 100))
+							Attack_Message = Attack_Message.replace("Virus Damage", f"Crit-Virus Damage")
+
+						# DEFENDER SECTION
+						
+						EComputer = ENEM_PARTY[E_ids]["Comp"]
+						ECurrent_Healt = ENEM_PARTY[E_ids]["CHEALT"]
+						EBase_Defense = USER_PARTY[E_ids]["B_Def"]
+
+						# Reduce Damage That Dealt Using Base_Defence
+						Damage_Base -= random.randint(EBase_Defense, (EBase_Defense + random.randint(1, 3)))
+						if Damage_Base <= 0:
+							Damage_Base = 5
+
+						Attack_Message = Attack_Message.replace("{DMG_HOLDER}", f"<{Damage_Base}>")						
+
+						# Generating Enemy Dodge
+						Dodge_Chance = 18
+						Dodge_Rolls = random.randint(1, 100)
+
+						if not Dodge_Chance < Dodge_Rolls:
+							Damage_Base = 0
+							Attack_Message = f"+ {user_name} Trying To Hack {ENEMY_NAME} PC but Failed."
+
+						ENEM_PARTY[E_ids]["CHEALT"] -= int(Damage_Base + 1000)
+
+						if ENEM_PARTY[E_ids]["CHEALT"] <= 0:
+							ENEM_PARTY[E_ids]["CHEALT"] = 0
+							self.EComputer_Destroyed.append(f"E{E_ids}")
+							self.battle_current_mssage.append(f"+ {ENEMY_NAME} PC <E{E_ids}> Has Been Destroyed!")
+
+						self.current_turn_action[holder_loops].remove(False)
+						self.current_turn_action[holder_loops].append(True)
+						self.battle_current_mssage.append(Attack_Message)
+						self.turn_done.append(f"U{ids}")
+
+						Desc_Holder = self.based_turn_descript.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
+						Desc_Holder = Desc_Holder.replace(f"<**SELECTED-U{ids}**>", "<**TURN-USED**>")
+						Attack_States = True
+
+					else:
+						Attack_States = False
+
+				if Attack_States:
+					Image_Procces = await battle_card(
+						[USER_PARTY, ENEM_PARTY],
+						{"User_Pfp":user_pfp, "EUser_Pfp":ENEMY_PFP},
+						{"User":user_name,"Enemy":ENEMY_NAME}
+					)
+					Send_Image = discord.File(fp=io.BytesIO(Image_Procces[0]), filename=f'{user_name}_battle.png')
+					Embed = discord.Embed(
+						title=f"{user_name} CyberHack Battle",
+						description=Desc_Holder,
+						color=color
+					)
+					Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+					Embed.set_image(url=f'attachment://{user_name}_battle.png')
+					self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage[-5:])}", "<Battle Message>")
+					return await interaction.edit_original_message(attachments=[Send_Image], embed=Embed)
+
+				return await interaction.followup.send(content="Please Select Another PC To Do The Action.", ephemeral=True)
 
 			@ui.button(label="🛡️ | DEF", style=discord.ButtonStyle.blurple)
 			async def defense_button(self, interaction, button: ui.Button):
@@ -3765,9 +3901,9 @@ class Economy_Cmd(commands.Cog):
 		Embed = discord.Embed(
 			title=f"{user_name} CyberHack Battle",
 			description=(
-				f"> **{user_name}'s' Computer :**{nl}"
+				f"> **{user_name}'s Computer :**{nl}"
 				f"{nl.join(UComp_List)}{nl}{nl}"
-				f"> **{ENEMY_NAME}'s' Computer :**{nl}"
+				f"> **{ENEMY_NAME}'s Computer :**{nl}"
 				f"{nl.join(EComp_List)}{nl}{nl}"
 				f"```diff{nl}<Battle Message>{nl}```"
 			),

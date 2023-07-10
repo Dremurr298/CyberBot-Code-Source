@@ -23,6 +23,14 @@ nl = "\n"
 
 #--------------------------------
 
+RPG_DIVISION = {
+	"BRONZE":{"I":300,"II":450,"III":590,"IV":700},
+	"SILVER":{"I":900,"II":1100,"III":1300,"IV":1500},
+	"GOLD":{"I":2000,"II":2300,"III":2500,"IV":3000}
+}
+
+#--------------------------------
+
 from PIL import Image, ImageDraw, ImageFont
 import aiohttp
 import asyncio
@@ -88,6 +96,30 @@ def inspect_time(seconds, str_date):
 		Time = Time.split()
 		Time = f'{Time[0]}D : {Time[1]}h : {Time[2]}m : {Time[3]}s'
 		return Time
+
+def calc_rank(rank, point):
+	while point > max(RPG_DIVISION[rank].values()):
+		rank_index = list(RPG_DIVISION.keys()).index(rank) + 1
+		if rank_index < len(RPG_DIVISION):
+			rank = list(RPG_DIVISION.keys())[rank_index]
+		else:
+			break
+
+	while point < min(RPG_DIVISION[rank].values()):
+		rank_index = list(RPG_DIVISION.keys()).index(rank) - 1
+		if rank_index >= 0:
+			rank = list(RPG_DIVISION.keys())[rank_index]
+		else:
+			break
+
+	for division, points in RPG_DIVISION[rank].items():
+		if point >= points:
+			new_division = division
+		elif point <= 0:
+			new_division = "I"
+
+	convert_division = {"I":1,"II":2,"III":3,"IV":4}[new_division]
+	return [f"{rank}", f"{new_division}", convert_division]
 
 #--------------------------------
 
@@ -283,7 +315,7 @@ async def battle_card(data:list=None, PFP_URL:dict=None, name:dict=None):
 
 			with Image.open(f"./img_folder/SideJobs_Img/PC/{Computer_Name}.png") as computer:
 				computer = computer.resize((250,250), resample=Image.Resampling.BILINEAR)
-				c_name_transform = f"{Computer_Name.replace('_', ' ' )} - {Computer_Level} Lv"
+				c_name_transform = Computer_Name.replace('_', ' ' )
 
 				Healt_Lenght = min(round((Computer_CHealt / Computer_Healt * 100) / 100 * 457), (457))
 				Saved_Lenght = Healt_Lenght # SAVING FOR ANOTHER CALCULATION
@@ -459,7 +491,7 @@ async def battle_card(data:list=None, PFP_URL:dict=None, name:dict=None):
 
 			with Image.open(f"./img_folder/SideJobs_Img/PC/{Computer_Name}.png") as computer:
 				computer = computer.resize((250,250), resample=Image.Resampling.BILINEAR)
-				c_name_transform = f"{Computer_Name.replace('_', ' ' )} - {Computer_Level} Lv"
+				c_name_transform = Computer_Name.replace('_', ' ')
 
 				Healt_Lenght = min(round((Computer_CHealt / Computer_Healt * 100) / 100 * 500), (500))
 				Saved_Lenght = Healt_Lenght # SAVING FOR ANOTHER CALCULATION
@@ -639,7 +671,7 @@ async def battle_card(data:list=None, PFP_URL:dict=None, name:dict=None):
 
 #--------------------------------
 
-class Economy_Cmd(commands.Cog):
+class Rpg_Cmd(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
@@ -743,7 +775,6 @@ class Economy_Cmd(commands.Cog):
 		#----------
 
 		for U_loop_hold in range(3):
-
 			try:
 				USER_PARTY[Ucount]["CHEALT"] = USER_PARTY[U_loop_hold]["C_Hlt"]
 				UComp_Select.append(discord.SelectOption(
@@ -811,6 +842,13 @@ class Economy_Cmd(commands.Cog):
 
 				self.user_dodge_chance = [15,15,15]
 				self.enmy_dodge_chance = [15,15,15]
+				self.end_turn_button.disabled = True
+
+				self.damage_total = 0
+				self.damaged_total = 0
+				self.dodge_total = 0
+
+				self.battle_states = None
 
 			@ui.select(placeholder='USER COMPUTER', max_values=3, min_values=1, options=UComp_Select)
 			async def u_computer_callback(self, interaction, select:discord.ui.Select):
@@ -845,12 +883,12 @@ class Economy_Cmd(commands.Cog):
 
 						elif (curr not in self.current_user_selected and curr in self.turn_done):
 							self.battle_current_mssage.append(
-								f"+ {user_name} SELECTING PC <{select.values[get]}> But Failed. Because the PC has been used before"
+								f"+ {user_name}'s SELECTING PC <{select.values[get]}> But Failed. Because the PC has been used before"
 							)
 
 						elif (curr not in self.current_user_selected and curr in self.UComputer_Destroyed):
 							self.battle_current_mssage.append(
-								f"+ {user_name} SELECTING PC <{select.values[get]}> But Failed. Because the PC has been destyoyed"
+								f"+ {user_name}'s SELECTING PC <{select.values[get]}> But Failed. Because the PC has been destyoyed"
 							)							
 
 				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
@@ -887,17 +925,17 @@ class Economy_Cmd(commands.Cog):
 					if curr != "None":
 						if curr not in self.current_enmy_selected and curr not in self.EComputer_Destroyed:
 							self.current_enmy_selected.append(select.values[get])
-							self.battle_current_mssage.append(f"- {user_name} TARGETTING PC <{select.values[get]}>")
+							self.battle_current_mssage.append(f"- {user_name}'s TARGETTING PC <{select.values[get]}>")
 							Desc_Holder = Desc_Holder.replace(f"S{select.values[get]}", "**TARGETTED**")
 
 						elif (curr in self.current_enmy_selected) or (curr in self.current_enmy_selected and curr in self.EComputer_Destroyed):
 							self.current_enmy_selected.remove(f"{select.values[get]}")
-							self.battle_current_mssage.append(f"- {user_name} UN-TARGETTING PC {select.values[get]}")
+							self.battle_current_mssage.append(f"- {user_name}'s UN-TARGETTING PC {select.values[get]}")
 							Desc_Holder = Desc_Holder.replace(f"**TARGETTED**", f"S{select.values[get]}")
 
 						elif (curr not in self.current_enmy_selected and curr in self.EComputer_Destroyed):
 							self.battle_current_mssage.append(
-								f"+ {user_name} TARGETTING PC <{select.values[get]}> But Failed. Because the enemy PC has been destyoyed"
+								f"+ {user_name}'s TARGETTING PC <{select.values[get]}> But Failed. Because the enemy PC has been destyoyed"
 							)							
 
 				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
@@ -911,7 +949,7 @@ class Economy_Cmd(commands.Cog):
 				self.based_turn_descript = Desc_Holder.replace(f"{nl.join(self.battle_current_mssage[-5:])}", "<Battle Message>")
 				await interaction.edit_original_message(embed=Embed)
 
-			@ui.button(label="⚔️ | ATK", style=discord.ButtonStyle.green)
+			@ui.button(label="ATK", style=discord.ButtonStyle.green)
 			async def attack_button(self, interaction, button: ui.Button):
 				interid = interaction.user.id
 
@@ -938,6 +976,7 @@ class Economy_Cmd(commands.Cog):
 						)
 
 				Attack_States = None
+				Desc_Holder = self.based_turn_descript
 				for holder_loops in range(len(self.current_turn_action)):
 					states = self.current_turn_action[holder_loops][3]
 
@@ -945,7 +984,7 @@ class Economy_Cmd(commands.Cog):
 						E_ids = int(self.current_enmy_selected[0].replace("E", ""))
 						ids = int(self.current_turn_action[holder_loops][0].replace('U', ''))
 
-						Attack_Message = f"+ {user_name} Hacking {ENEMY_NAME} PC <{E_ids}> And Dealt " + "{DMG_HOLDER} {DAMAGE_TYPE}!"
+						Attack_Message = f"+ {user_name}'s Hacking {ENEMY_NAME}'s PC <{E_ids}> And Dealt " + "{DMG_HOLDER} {DAMAGE_TYPE}!"
 
 						# ATTACKER SECTION
 
@@ -987,22 +1026,22 @@ class Economy_Cmd(commands.Cog):
 
 						if not Dodge_Chance < Dodge_Rolls:
 							Damage_Base = 0
-							Attack_Message = f"+ {user_name} Trying To Hack {ENEMY_NAME} PC but Failed."
+							Attack_Message = f"+ {user_name}'s Trying To Hack {ENEMY_NAME}'s PC but Failed."
 
 						ENEM_PARTY[E_ids]["CHEALT"] -= Damage_Base
-
 						if ENEM_PARTY[E_ids]["CHEALT"] <= 0:
 							ENEM_PARTY[E_ids]["CHEALT"] = 0
 							ENEM_PARTY[E_ids]["Computer"] = "Destroyed_Pc"
 							self.EComputer_Destroyed.append(f"E{E_ids}")
-							self.battle_current_mssage.append(f"+ {ENEMY_NAME} PC <E{E_ids}> Has Been Destroyed!")
+							self.battle_current_mssage.append(f"+ {ENEMY_NAME}'s PC <E{E_ids}> Has Been Destroyed!")
 
+						self.damage_total += Damage_Base
+						self.battle_current_mssage.append(Attack_Message)
 						self.current_turn_action[holder_loops].remove(False)
 						self.current_turn_action[holder_loops].append(True)
-						self.battle_current_mssage.append(Attack_Message)
 						self.turn_done.append(f"U{ids}")
 
-						Desc_Holder = self.based_turn_descript.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
+						Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
 						Desc_Holder = Desc_Holder.replace(f"<**SELECTED-U{ids}**>", "<**TURN-USED**>")
 						Attack_States = True
 
@@ -1016,21 +1055,30 @@ class Economy_Cmd(commands.Cog):
 						{"User":user_name,"Enemy":ENEMY_NAME}
 					)
 
-					if self.EComputer_Destroyed.length >= ENEM_PARTY.length:
+					if len(self.EComputer_Destroyed) >= len(ENEM_PARTY):
+						for items in self.children:
+							items.disabled = True
+							if items.type == discord.ComponentType.button:
+								items.style = discord.ButtonStyle.green
+
+						self.battle_states = "WIN"
+						self.end_turn_button.disabled = False
+
+					if len(self.UComputer_Destroyed) >= len(USER_PARTY):
+						for items in self.children:
+							items.disabled = True
+							if items.type == discord.ComponentType.button:
+								items.style = discord.ButtonStyle.red
+
+						self.battle_states = "LOSE"
+						self.end_turn_button.disabled = False
+
+					if len(self.turn_done) >= len(USER_PARTY):
 						for items in self.children:
 							items.disabled = True
 
-						end_btn = discord.utils.get(self.children, custom_id="END_TURN_END_BATTLE")
-						end_btn.style = discord.ButtonStyle.green
-						end_btn.label = "� | DONE!"
-
-					if self.UComputer_Destroyed.length >= USER_PARTY.length:
-						for items in self.children:
-							items.disabled = True
-
-						end_btn = discord.utils.get(self.children, custom_id="END_TURN_END_BATTLE")
-						end_btn.style = discord.ButtonStyle.red
-						end_btn.label = "☠ | DONE!"
+						self.surrender_button.disabled = False
+						self.end_turn_button.disabled = False
 
 					Send_Image = discord.File(fp=io.BytesIO(Image_Procces[0]), filename=f'{user_name}_battle.png')
 					Embed = discord.Embed(
@@ -1045,7 +1093,7 @@ class Economy_Cmd(commands.Cog):
 
 				return await interaction.followup.send(content="Please Select Another PC To Do The Action.", ephemeral=True)
 
-			@ui.button(label="🛡️ | DEF", style=discord.ButtonStyle.blurple)
+			@ui.button(label="DEF", style=discord.ButtonStyle.blurple)
 			async def defense_button(self, interaction, button: ui.Button):
 				interid = interaction.user.id
 
@@ -1072,6 +1120,7 @@ class Economy_Cmd(commands.Cog):
 						)
 
 				Deff_States  = None
+				Desc_Holder = self.based_turn_descript
 				for holder_loops in range(len(self.current_turn_action)):
 					states = self.current_turn_action[holder_loops][3]
 
@@ -1080,17 +1129,54 @@ class Economy_Cmd(commands.Cog):
 
 						# Increasing Number of PC Defense By 40% And Increasing PC Dodge Chance By 10%
 						Base_deff = USER_PARTY[ids]["B_Def"]
-						Base_deff = int(Base_deff*1.4)
+						Base_deff = int(Base_deff * 0.4)
 						USER_PARTY[ids]["B_Def"] = Base_deff
 						self.user_dodge_chance[ids] += 10
 
-						self.battle_current_mssage.append(f"+ {user_name} PC <U{ids}> Deffense has been increase by 40%!")
+						self.current_turn_action[holder_loops].remove(False)
+						self.current_turn_action[holder_loops].append(True)
+						self.turn_done.append(f"U{ids}")
+						self.battle_current_mssage.append(f"+ {user_name}'s PC <U{ids}> Deffense has been increase by 40%!")
+
+						Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
+						Desc_Holder = Desc_Holder.replace(f"<**SELECTED-U{ids}**>", "<**TURN-USED**>")
 						Deff_States = True
 
 					else:
 						Deff_States = False
 
 				if Deff_States:
+					Image_Procces = await battle_card(
+						[USER_PARTY, ENEM_PARTY],
+						{"User_Pfp":user_pfp, "EUser_Pfp":ENEMY_PFP},
+						{"User":user_name,"Enemy":ENEMY_NAME}
+					)
+
+					if len(self.EComputer_Destroyed) >= len(ENEM_PARTY):
+						for items in self.children:
+							items.disabled = True
+							if items.type == discord.ComponentType.button:
+								items.style = discord.ButtonStyle.green
+
+						self.battle_states = "WIN"
+						self.end_turn_button.disabled = False
+
+					if len(self.UComputer_Destroyed) >= len(USER_PARTY):
+						for items in self.children:
+							items.disabled = True
+							if items.type == discord.ComponentType.button:
+								items.style = discord.ButtonStyle.red
+
+						self.battle_states = "LOSE"
+						self.end_turn_button.disabled = False
+
+					if len(self.turn_done) >= len(USER_PARTY):
+						for items in self.children:
+							items.disabled = True
+
+						self.surrender_button.disabled = False
+						self.end_turn_button.disabled = False
+
 					Send_Image = discord.File(fp=io.BytesIO(Image_Procces[0]), filename=f'{user_name}_battle.png')
 					Embed = discord.Embed(
 						title=f"{user_name} CyberHack Battle",
@@ -1104,7 +1190,7 @@ class Economy_Cmd(commands.Cog):
 
 				return await interaction.followup.send(content="Please Select Another PC To Do The Action.", ephemeral=True)
 
-			@ui.button(label="🏳️ | OUT", style=discord.ButtonStyle.red)
+			@ui.button(label="OUT", style=discord.ButtonStyle.red)
 			async def surrender_button(self, interaction, button: ui.Button):
 				interid = interaction.user.id
 
@@ -1118,7 +1204,89 @@ class Economy_Cmd(commands.Cog):
 
 				await interaction.response.defer()
 
-			@ui.button(label="☑️ | END TURN", style=discord.ButtonStyle.blurple, custom_id="END_TURN_END_BATTLE")
+				if self.current_turn == 0:
+					# If the game turn equal to 0, system will make user lose the point
+					# also reducing their money by 2000.
+					check = cursor.find_one({"id":user_id})
+
+					check["SJ-DATA"]["RANK_DATA"]["P_RANK"] -= 100
+					check["N_economy_Data"]["Money"] -= 2000
+
+					if check["SJ-DATA"]["RANK_DATA"]["P_RANK"] <= 0:
+						check["SJ-DATA"]["RANK_DATA"]["P_RANK"] = 0
+					if check["N_economy_Data"]["Money"] <= 0:
+						check["N_economy_Data"]["Money"] = 0
+
+					cursor.update_many({"id":user_id}, {"$set":{
+						"N_economy_Data":check["N_economy_Data"],
+						"SJ-DATA":check["SJ-DATA"]
+					}})
+
+					Embed = discord.Embed(
+						title=f"{user_name} | Battle Lose!",
+						description=(
+							f"> ```{nl}"
+							f"> Dremur surrendered the match at turn 0,{nl}"
+							f"> causing a drop in points and penalty was given!```{nl}"
+							f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
+							f"```diff{nl}"
+							f"+ Damage Dealt  : {self.damage_total} {nl}"
+							f"- Damage Taken  : {self.damaged_total} {nl}"
+							f"+ Dodge Counter : {self.dodge_total} {nl}"
+							f"+ Turn Total    : {self.current_turn} {nl}"
+							f"```{nl}"
+							f"```cs{nl}"
+							f"Rank Point      : -100{nl}"
+							f"Battle Cooldown : +100s{nl}"
+							f"Money           : -2000 CyberMoney{nl}"
+							f"```"
+						),
+						color=color
+					)
+					for items in self.children:
+						items.disabled = True
+
+					return await interaction.edit_original_message(embed=Embed, view=self)
+
+				else:
+					check = cursor.find_one({"id":user_id})
+					check["SJ-DATA"]["RANK_DATA"]["P_RANK"] -= 100
+
+					if check["SJ-DATA"]["RANK_DATA"]["P_RANK"] <= 0:
+						check["SJ-DATA"]["RANK_DATA"]["P_RANK"] = 0
+
+					cursor.update_many({"id":user_id}, {"$set":{
+						"N_economy_Data":check["N_economy_Data"],
+						"SJ-DATA":check["SJ-DATA"]
+					}})
+
+					Embed = discord.Embed(
+						title=f"{user_name} | Battle Lose!",
+						description=(
+							f"> ```{nl}"
+							f"> Dremur surrendered the match at turn 0,{nl}"
+							f"> causing a drop in points and penalty was given!```{nl}"
+							f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
+							f"```diff{nl}"
+							f"+ Damage Dealt  : {self.damage_total} {nl}"
+							f"- Damage Taken  : {self.damaged_total} {nl}"
+							f"+ Dodge Counter : {self.dodge_total} {nl}"
+							f"+ Turn Total    : {self.current_turn} {nl}"
+							f"```{nl}"
+							f"```cs{nl}"
+							f"Rank Point      : -100{nl}"
+							f"Battle Cooldown : -{nl}"
+							f"Money           : -{nl}"
+							f"```"
+						),
+						color=color
+					)
+					for items in self.children:
+						items.disabled = True
+
+					return await interaction.edit_original_message(embed=Embed, view=self)
+
+			@ui.button(label="END TURN", style=discord.ButtonStyle.blurple, custom_id="END_TURN_END_BATTLE")
 			async def end_turn_button(self, interaction, button:ui.Button):
 				interid = interaction.user.id
 
@@ -1130,10 +1298,76 @@ class Economy_Cmd(commands.Cog):
 					)
 					return interid == user_id
 
-				await interaction.response.defer()
+				if self.battle_states == "WIN":
+					check = cursor.find_one({"id":user_id})
+
+					default_gain_point = {"bronze": 100, "silver": 80, "gold": 50} # DEFAULT POINT
+					default_division = {"bronze": 1, "silver": 2, "gold": 3}       # DIVISION POINT
+					default_win = {"bronze":1.3, "silver":1.1, "gold": 0}          # WIN MULTIPLIER
+
+					U_RANK = check["SJ-DATA"]["RANK_DATA"]["C_RANK"]
+					E_RANK = ENEMY["SJ-DATA"]["RANK_DATA"]["C_RANK"]
+
+					U_TURNS = 10
+					U_DAMAGE = 437
+					user_taken_damage = 200
+					user_destroying_pc = 3
+					user_destroyed_pc = 2
+
+					# Gainining Normal Point
+					gain_points = default_gain_point[U_RANK]
+					if (default_division[U_RANK] < default_division[E_RANK]) and (U_RANK != "gold"):
+					    gain_points += int(default_gain_point[U_RANK] * default_win[U_RANK])
+
+					# Point calculation by using game turn, taken damage, dealt damage, user destroyed pc
+					# and enemy destroyed pc. 
+					gain_points -= self.current_turn / 2.5
+					gain_points -= self.damaged_total * 0.5
+					gain_points -= 20 * len(self.UComputer_Destroyed)
+					    
+					gain_points += self.damage_total * 0.001
+					gain_points += 50 * len(self.EComputer_Destroyed)
+					gain_points = int(gain_points)
+
+					if gain_points <= 0:
+						gain_points = 10
+
+					calculation_rank = calc_rank(check["SJ-DATA"]["RANK_DATA"]{"C_RANK"}, int(check["SJ-DATA"]["RANK_DATA"]["P_RANK"]))
+					cursor.update_many({"id":user_id}, {"$set":{
+						"N_economy_Data":check["N_economy_Data"],
+						"SJ-DATA":check["SJ-DATA"]
+					}})
+
+					Embed = discord.Embed(
+						title=f"{user_name} | Battle Lose!",
+						description=(
+							f"> ```{nl}"
+							f"> Dremur surrendered the match at turn 0,{nl}"
+							f"> causing a drop in points and penalty was given!```{nl}"
+							f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
+							f"```diff{nl}"
+							f"+ Damage Dealt  : {self.damage_total} {nl}"
+							f"- Damage Taken  : {self.damaged_total} {nl}"
+							f"+ Dodge Counter : {self.dodge_total} {nl}"
+							f"+ Turn Total    : {self.current_turn} {nl}"
+							f"```{nl}"
+							f"```cs{nl}"
+							f"Rank Point      : -100{nl}"
+							f"Battle Cooldown : +100s{nl}"
+							f"Money           : -2000 CyberMoney{nl}"
+							f"```"
+						),
+						color=color
+					)
+					for items in self.children:
+						items.disabled = True
+
+					return await interaction.edit_original_message(embed=Embed, view=self)
 
 			async def on_timeout(self):
-				pass
+				for items in self.children:
+					items.disabled = True
+				await interaction.edit_original_message(view=self)
 
 		Send_Image = discord.File(fp=io.BytesIO(Image_Procces[0]), filename=f'{user_name}_battle.png')
 		Embed = discord.Embed(
@@ -1158,4 +1392,4 @@ class Economy_Cmd(commands.Cog):
 		)
 
 async def setup(bot):
-	await bot.add_cog(Economy_Cmd(bot))
+	await bot.add_cog(Rpg_Cmd(bot))

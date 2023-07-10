@@ -24,9 +24,9 @@ nl = "\n"
 #--------------------------------
 
 RPG_DIVISION = {
-	"BRONZE":{"I":300,"II":450,"III":590,"IV":700},
-	"SILVER":{"I":900,"II":1100,"III":1300,"IV":1500},
-	"GOLD":{"I":2000,"II":2300,"III":2500,"IV":3000}
+	"Bronze":{"I":300,"II":450,"III":590,"IV":700},
+	"Silver":{"I":900,"II":1100,"III":1300,"IV":1500},
+	"Gold":{"I":2000,"II":2300,"III":2500,"IV":3000}
 }
 
 #--------------------------------
@@ -97,7 +97,7 @@ def inspect_time(seconds, str_date):
 		Time = f'{Time[0]}D : {Time[1]}h : {Time[2]}m : {Time[3]}s'
 		return Time
 
-def calc_rank(rank, point):
+def calc_rank(rank, Division, point):
 	while point > max(RPG_DIVISION[rank].values()):
 		rank_index = list(RPG_DIVISION.keys()).index(rank) + 1
 		if rank_index < len(RPG_DIVISION):
@@ -111,15 +111,31 @@ def calc_rank(rank, point):
 			rank = list(RPG_DIVISION.keys())[rank_index]
 		else:
 			break
-
+	
 	for division, points in RPG_DIVISION[rank].items():
 		if point >= points:
 			new_division = division
 		elif point <= 0:
 			new_division = "I"
+		else:
+			new_division = {1:"I",2:"II",3:"III",4:"IV"}[Division]
 
 	convert_division = {"I":1,"II":2,"III":3,"IV":4}[new_division]
-	return [f"{rank}", f"{new_division}", convert_division]
+	if new_division == "IV" and rank != "Gold":
+		next_rank_index = list(RPG_DIVISION.keys()).index(rank) + 1
+		next_rank = list(RPG_DIVISION.keys())[next_rank_index]
+		next_division = "I"
+		next_requirement = RPG_DIVISION[next_rank][next_division]
+
+	elif new_division == "IV" and rank == "Gold":
+		next_division = None
+		next_requirement = "MAX"
+
+	else:
+		next_division = {1:"I",2:"II",3:"III",4:"IV"}[convert_division+1]
+		next_requirement = RPG_DIVISION[rank][next_division]
+	
+	return [f"{rank}", f"{new_division}", convert_division, next_requirement]
 
 #--------------------------------
 
@@ -1028,7 +1044,7 @@ class Rpg_Cmd(commands.Cog):
 							Damage_Base = 0
 							Attack_Message = f"+ {user_name}'s Trying To Hack {ENEMY_NAME}'s PC but Failed."
 
-						ENEM_PARTY[E_ids]["CHEALT"] -= Damage_Base
+						ENEM_PARTY[E_ids]["CHEALT"] -= int(Damage_Base + 10000)
 						if ENEM_PARTY[E_ids]["CHEALT"] <= 0:
 							ENEM_PARTY[E_ids]["CHEALT"] = 0
 							ENEM_PARTY[E_ids]["Computer"] = "Destroyed_Pc"
@@ -1064,7 +1080,7 @@ class Rpg_Cmd(commands.Cog):
 						self.battle_states = "WIN"
 						self.end_turn_button.disabled = False
 
-					if len(self.UComputer_Destroyed) >= len(USER_PARTY):
+					elif len(self.UComputer_Destroyed) >= len(USER_PARTY):
 						for items in self.children:
 							items.disabled = True
 							if items.type == discord.ComponentType.button:
@@ -1073,7 +1089,7 @@ class Rpg_Cmd(commands.Cog):
 						self.battle_states = "LOSE"
 						self.end_turn_button.disabled = False
 
-					if len(self.turn_done) >= len(USER_PARTY):
+					elif len(self.turn_done) >= len(USER_PARTY):
 						for items in self.children:
 							items.disabled = True
 
@@ -1204,87 +1220,47 @@ class Rpg_Cmd(commands.Cog):
 
 				await interaction.response.defer()
 
-				if self.current_turn == 0:
-					# If the game turn equal to 0, system will make user lose the point
-					# also reducing their money by 2000.
-					check = cursor.find_one({"id":user_id})
+				# Penalty of surrender
+				check = cursor.find_one({"id":user_id})
 
-					check["SJ-DATA"]["RANK_DATA"]["P_RANK"] -= 100
-					check["N_economy_Data"]["Money"] -= 2000
+				check["SJ-DATA"]["RANK_DATA"]["P_RANK"] -= 100
+				check["N_economy_Data"]["Money"] -= 2000
 
-					if check["SJ-DATA"]["RANK_DATA"]["P_RANK"] <= 0:
-						check["SJ-DATA"]["RANK_DATA"]["P_RANK"] = 0
-					if check["N_economy_Data"]["Money"] <= 0:
-						check["N_economy_Data"]["Money"] = 0
+				if check["SJ-DATA"]["RANK_DATA"]["P_RANK"] <= 0:
+					check["SJ-DATA"]["RANK_DATA"]["P_RANK"] = 0
+				if check["N_economy_Data"]["Money"] <= 0:
+					check["N_economy_Data"]["Money"] = 0
 
-					cursor.update_many({"id":user_id}, {"$set":{
-						"N_economy_Data":check["N_economy_Data"],
-						"SJ-DATA":check["SJ-DATA"]
-					}})
+				cursor.update_many({"id":user_id}, {"$set":{
+					"N_economy_Data":check["N_economy_Data"],
+					"SJ-DATA":check["SJ-DATA"]
+				}})
 
-					Embed = discord.Embed(
-						title=f"{user_name} | Battle Lose!",
-						description=(
-							f"> ```{nl}"
-							f"> Dremur surrendered the match at turn 0,{nl}"
-							f"> causing a drop in points and penalty was given!```{nl}"
-							f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
-							f"```diff{nl}"
-							f"+ Damage Dealt  : {self.damage_total} {nl}"
-							f"- Damage Taken  : {self.damaged_total} {nl}"
-							f"+ Dodge Counter : {self.dodge_total} {nl}"
-							f"+ Turn Total    : {self.current_turn} {nl}"
-							f"```{nl}"
-							f"```cs{nl}"
-							f"Rank Point      : -100{nl}"
-							f"Battle Cooldown : +100s{nl}"
-							f"Money           : -2000 CyberMoney{nl}"
-							f"```"
-						),
-						color=color
-					)
-					for items in self.children:
-						items.disabled = True
+				Embed = discord.Embed(
+					title=f"{user_name} | Battle Lose!",
+					description=(
+						f"> ```{nl}"
+						f"> {user_name} surrendered the match at turn 0,{nl}"
+						f"> causing a drop in points and penalty was given!```{nl}"
+						f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
+						f"```diff{nl}"
+						f"+ Damage Dealt  : {self.damage_total} {nl}"
+						f"- Damage Taken  : {self.damaged_total} {nl}"
+						f"+ Dodge Counter : {self.dodge_total} {nl}"
+						f"+ Turn Total    : {self.current_turn} {nl}"
+						f"```{nl}"
+						f"```cs{nl}"
+						f"Rank Point      : -100{nl}"
+						f"Battle Cooldown : +100s{nl}"
+						f"Money           : -2000 CyberMoney{nl}"
+						f"```"
+					),
+					color=color
+				)
 
-					return await interaction.edit_original_message(embed=Embed, view=self)
-
-				else:
-					check = cursor.find_one({"id":user_id})
-					check["SJ-DATA"]["RANK_DATA"]["P_RANK"] -= 100
-
-					if check["SJ-DATA"]["RANK_DATA"]["P_RANK"] <= 0:
-						check["SJ-DATA"]["RANK_DATA"]["P_RANK"] = 0
-
-					cursor.update_many({"id":user_id}, {"$set":{
-						"N_economy_Data":check["N_economy_Data"],
-						"SJ-DATA":check["SJ-DATA"]
-					}})
-
-					Embed = discord.Embed(
-						title=f"{user_name} | Battle Lose!",
-						description=(
-							f"> ```{nl}"
-							f"> Dremur surrendered the match at turn 0,{nl}"
-							f"> causing a drop in points and penalty was given!```{nl}"
-							f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
-							f"```diff{nl}"
-							f"+ Damage Dealt  : {self.damage_total} {nl}"
-							f"- Damage Taken  : {self.damaged_total} {nl}"
-							f"+ Dodge Counter : {self.dodge_total} {nl}"
-							f"+ Turn Total    : {self.current_turn} {nl}"
-							f"```{nl}"
-							f"```cs{nl}"
-							f"Rank Point      : -100{nl}"
-							f"Battle Cooldown : -{nl}"
-							f"Money           : -{nl}"
-							f"```"
-						),
-						color=color
-					)
-					for items in self.children:
-						items.disabled = True
-
-					return await interaction.edit_original_message(embed=Embed, view=self)
+				for items in self.children:
+					items.disabled = True
+				return await interaction.edit_original_message(embed=Embed, view=self)
 
 			@ui.button(label="END TURN", style=discord.ButtonStyle.blurple, custom_id="END_TURN_END_BATTLE")
 			async def end_turn_button(self, interaction, button:ui.Button):
@@ -1298,21 +1274,19 @@ class Rpg_Cmd(commands.Cog):
 					)
 					return interid == user_id
 
+				await interaction.response.defer()
 				if self.battle_states == "WIN":
 					check = cursor.find_one({"id":user_id})
 
-					default_gain_point = {"bronze": 100, "silver": 80, "gold": 50} # DEFAULT POINT
-					default_division = {"bronze": 1, "silver": 2, "gold": 3}       # DIVISION POINT
-					default_win = {"bronze":1.3, "silver":1.1, "gold": 0}          # WIN MULTIPLIER
+					# RPG Poin Gain Division
+					default_gain_point = {"Bronze": 100, "Silver": 80, "Gold": 50} # DEFAULT POINT
+					default_division = {"Bronze": 1, "Silver": 2, "Gold": 3}       # DIVISION POINT
+					default_win = {"Bronze":1.3, "Silver":1.1, "Gold": 0}          # WIN MULTIPLIER
 
 					U_RANK = check["SJ-DATA"]["RANK_DATA"]["C_RANK"]
 					E_RANK = ENEMY["SJ-DATA"]["RANK_DATA"]["C_RANK"]
 
-					U_TURNS = 10
-					U_DAMAGE = 437
-					user_taken_damage = 200
-					user_destroying_pc = 3
-					user_destroyed_pc = 2
+					U_TURNS = self.current_turn
 
 					# Gainining Normal Point
 					gain_points = default_gain_point[U_RANK]
@@ -1332,37 +1306,53 @@ class Rpg_Cmd(commands.Cog):
 					if gain_points <= 0:
 						gain_points = 10
 
-					calculation_rank = calc_rank(check["SJ-DATA"]["RANK_DATA"]{"C_RANK"}, int(check["SJ-DATA"]["RANK_DATA"]["P_RANK"]))
+					calculation_rank = calc_rank(
+						check["SJ-DATA"]["RANK_DATA"]["C_RANK"],
+						check["SJ-DATA"]["RANK_DATA"]["CRNKRQ"],
+						int(check["SJ-DATA"]["RANK_DATA"]["P_RANK"]+gain_points)
+					)
+
+					check["SJ-DATA"]["RANK_DATA"]["C_RANK"] = calculation_rank[0]
+					check["SJ-DATA"]["RANK_DATA"]["PMRANK"] = calculation_rank[3]
+					check["SJ-DATA"]["RANK_DATA"]["CRNKRQ"] = calculation_rank[2]
+					check["SJ-DATA"]["RANK_DATA"]["P_RANK"] += gain_points
+
+					Money_gain = random.randint(1000, 10000)
+					check["N_economy_Data"]["Money"] += Money_gain
+
 					cursor.update_many({"id":user_id}, {"$set":{
 						"N_economy_Data":check["N_economy_Data"],
 						"SJ-DATA":check["SJ-DATA"]
 					}})
 
 					Embed = discord.Embed(
-						title=f"{user_name} | Battle Lose!",
+						title=f"{user_name} | Battle Victory!",
 						description=(
-							f"> ```{nl}"
-							f"> Dremur surrendered the match at turn 0,{nl}"
-							f"> causing a drop in points and penalty was given!```{nl}"
-							f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
+							f"```{user_name} defeated {ENEMY_NAME} and won the match!```{nl}"
+							f"> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
 							f"```diff{nl}"
 							f"+ Damage Dealt  : {self.damage_total} {nl}"
 							f"- Damage Taken  : {self.damaged_total} {nl}"
 							f"+ Dodge Counter : {self.dodge_total} {nl}"
 							f"+ Turn Total    : {self.current_turn} {nl}"
 							f"```{nl}"
+							f"```diff{nl}"
+							f"- User Pc Destroyed     : {self.current_turn} {nl}"
+							f"+ Enemy Pc Destroyed    : {self.current_turn} {nl}"
+							f"```{nl}"
+							f"> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
 							f"```cs{nl}"
-							f"Rank Point      : -100{nl}"
-							f"Battle Cooldown : +100s{nl}"
-							f"Money           : -2000 CyberMoney{nl}"
+							f"Rank Point      : +{gain_points}/{check['SJ-DATA']['RANK_DATA']['PMRANK']}{nl}"
+							f"Money           : +{Money_gain}{nl}"
+							f"Component       : -{nl}"
+							f"Scraps          : -{nl}"
 							f"```"
 						),
 						color=color
 					)
 					for items in self.children:
 						items.disabled = True
-
-					return await interaction.edit_original_message(embed=Embed, view=self)
+					await interaction.edit_original_message(embed=Embed,view=self)
 
 			async def on_timeout(self):
 				for items in self.children:

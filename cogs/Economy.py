@@ -933,8 +933,8 @@ class Economy_Cmd(commands.Cog):
 									"C_RANK":"Bronze", # Rank tier
 									"P_RANK":0,		   # Currently rank point
 									"PMRANK":300,      # Max rank point
-									"RNK_RQ":4,  	   # Requirement of the rankup ( I / II / III etc )
-									"CRNKRQ":1 		   # Currently requirement rankup
+									"RNK_RQ":4,  	   # UNUSED
+									"CRNKRQ":1 		   # Currently Rank Divisiom
 								},
 								"COMP_HAVE":[
 									{
@@ -950,7 +950,8 @@ class Economy_Cmd(commands.Cog):
 									}
 								],
 								"COMP_SHARD":0,
-								"COMP_PRTY":[]
+								"COMP_PRTY":[],
+								"BTTL_STTS":False
 							}
 						}
 						self.user_data = Data
@@ -1030,7 +1031,8 @@ class Economy_Cmd(commands.Cog):
 									}
 								],
 								"COMP_SHARD":0,
-								"COMP_PRTY":[]
+								"COMP_PRTY":[],
+								"BTTL_STTS":False
 							}
 						}
 						self.user_data = Data

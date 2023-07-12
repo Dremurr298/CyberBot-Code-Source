@@ -333,6 +333,9 @@ async def battle_card(data:list=None, PFP_URL:dict=None, name:dict=None):
 				computer = computer.resize((250,250), resample=Image.Resampling.BILINEAR)
 				c_name_transform = Computer_Name.replace('_', ' ' )
 
+				if len(c_name_transform) >= 14:
+					c_name_transform = c_name_transform[:14] + "-"
+
 				Healt_Lenght = min(round((Computer_CHealt / Computer_Healt * 100) / 100 * 457), (457))
 				Saved_Lenght = Healt_Lenght # SAVING FOR ANOTHER CALCULATION
 
@@ -508,6 +511,9 @@ async def battle_card(data:list=None, PFP_URL:dict=None, name:dict=None):
 			with Image.open(f"./img_folder/SideJobs_Img/PC/{Computer_Name}.png") as computer:
 				computer = computer.resize((250,250), resample=Image.Resampling.BILINEAR)
 				c_name_transform = Computer_Name.replace('_', ' ')
+
+				if len(c_name_transform) >= 14:
+					c_name_transform = c_name_transform[:14] + "-"
 
 				Healt_Lenght = min(round((Computer_CHealt / Computer_Healt * 100) / 100 * 500), (500))
 				Saved_Lenght = Healt_Lenght # SAVING FOR ANOTHER CALCULATION
@@ -773,10 +779,46 @@ class Rpg_Cmd(commands.Cog):
 		USER_PARTY = check["SJ-DATA"]["COMP_PRTY"]
 		ENEM_PARTY = ENEMY["SJ-DATA"]["COMP_PRTY"]
 
-		for comp_hold in  USER_PARTY:
+		if len(USER_PARTY) <= 0:
+			Embed = discord.Embed(
+				title=f'{Emoji_1} | Command Failed',
+				description=f"> Can't start the battle because {user.name} didn't have computer comp!",
+				color=color
+			)
+			Embed.set_footer(text=f'Executor : {user_name} | {Time}')
+			Embed.set_thumbnail(url=User.display_avatar.url)
+			return await interaction.followup.send(embed=Embed)
+
+		if len(ENEM_PARTY) <= 0:
+			Random_add = random.randint(1,3)
+			Division_Multiplier = {"Bronze":(1,5),"Silver":(5,9),"Gold":(9,15)}
+			user_rank = check["SJ-DATA"]["RANK_DATA"]["C_RANK"]
+
+			for Holder in range(Random_add):
+				Bot_New_Comp = {
+					"Comp":"Ancient_Computer",
+					"C_Hlt": 2000,
+					"B_Dmg": 10,
+					"M_Dmg": 100,
+					"C_Rte": 40,
+					"C_Dmg": 20,
+					"B_Def": 25,
+					"C_Lvl": 1,
+					"C_Mlv": 15
+				}
+				Bot_New_Comp["C_Lvl"] = random.randint(Division_Multiplier[user_rank][0], Division_Multiplier[user_rank][1])
+
+				Bot_New_Comp["C_Hlt"] += int(200 * Bot_New_Comp["C_Lvl"])
+				Bot_New_Comp["B_Dmg"] += int(10 * Bot_New_Comp["C_Lvl"])
+				Bot_New_Comp["M_Dmg"] += int(10 * Bot_New_Comp["C_Lvl"])
+				Bot_New_Comp["B_Def"] += int(5 * Bot_New_Comp["C_Lvl"])
+
+				ENEM_PARTY.append(Bot_New_Comp)
+
+		for comp_hold in USER_PARTY:
 			comp_hold["CHEALT"] = comp_hold["C_Hlt"]
 
-		for enemy_comp_hold in  ENEM_PARTY:
+		for enemy_comp_hold in ENEM_PARTY:
 			enemy_comp_hold["CHEALT"] = enemy_comp_hold["C_Hlt"]
 
 		UComp_Select = []
@@ -834,7 +876,7 @@ class Rpg_Cmd(commands.Cog):
 
 		class Menu(discord.ui.View):
 			def __init__(self):
-				super().__init__()
+				super().__init__(timeout=60)
 				self.current_turn = 0
 
 				self.current_user_selected = []
@@ -851,6 +893,7 @@ class Rpg_Cmd(commands.Cog):
 
 				self.based_turn_descript = None
 				self.current_turn_action = []
+				self.enemy_id_holder_turn_done = []
 				self.turn_done = []
 
 				self.UComputer_Destroyed = []
@@ -1032,9 +1075,10 @@ class Rpg_Cmd(commands.Cog):
 						# Reduce Damage That Dealt Using Base_Defence
 						Damage_Base -= random.randint(EBase_Defense, (EBase_Defense + random.randint(1, 3)))
 						if Damage_Base <= 0:
-							Damage_Base = 5
+							Damage_Base = random.randint(1, 10)
 
-						Attack_Message = Attack_Message.replace("{DMG_HOLDER}", f"<{Damage_Base}>")						
+						Damage_Base *= 3 # BALANCING DAMAGE (FOR NOW)
+						Attack_Message = Attack_Message.replace("{DMG_HOLDER}", f"<{Damage_Base}>")
 
 						# Generating Enemy Dodge
 						Dodge_Chance = self.enmy_dodge_chance[E_ids]
@@ -1044,7 +1088,7 @@ class Rpg_Cmd(commands.Cog):
 							Damage_Base = 0
 							Attack_Message = f"+ {user_name}'s Trying To Hack {ENEMY_NAME}'s PC but Failed."
 
-						ENEM_PARTY[E_ids]["CHEALT"] -= int(Damage_Base + 10000)
+						ENEM_PARTY[E_ids]["CHEALT"] -= Damage_Base
 						if ENEM_PARTY[E_ids]["CHEALT"] <= 0:
 							ENEM_PARTY[E_ids]["CHEALT"] = 0
 							ENEM_PARTY[E_ids]["Computer"] = "Destroyed_Pc"
@@ -1257,6 +1301,8 @@ class Rpg_Cmd(commands.Cog):
 					),
 					color=color
 				)
+				Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+				Embed.set_image(url=f'attachment://{user_name}_battle.png')
 
 				for items in self.children:
 					items.disabled = True
@@ -1275,20 +1321,60 @@ class Rpg_Cmd(commands.Cog):
 					return interid == user_id
 
 				await interaction.response.defer()
-				if self.battle_states == "WIN":
+
+				if self.battle_states != None:
 					check = cursor.find_one({"id":user_id})
+					description = (
+						"```{GAME_END_STATES}```\n"
+						"> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+						"```diff\n"
+						"+ Damage Dealt  : {DMGDLT} \n"
+						"- Damage Taken  : {DMGTKN} \n"
+						"+ Dodge Counter : {TTLDDG} \n"
+						"+ Turn Total    : {TTLTRN} \n"
+						"```\n"
+						"```diff\n"
+						"- User Pc Destroyed     : {UPCDESTRY} \n"
+						"+ Enemy Pc Destroyed    : {EPCDESTRY} \n"
+						"```\n"
+						"> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+						"```cs\n"
+						"Rank Point      : {RPOINT_GAIN} \n"
+						"Money           : {MONEY_GAIN}  \n"
+						"Component       : -\n"
+						"Scraps          : -\n"
+						"```"
+					)
 
 					# RPG Poin Gain Division
 					default_gain_point = {"Bronze": 100, "Silver": 80, "Gold": 50} # DEFAULT POINT
 					default_division = {"Bronze": 1, "Silver": 2, "Gold": 3}       # DIVISION POINT
 					default_win = {"Bronze":1.3, "Silver":1.1, "Gold": 0}          # WIN MULTIPLIER
 
+					if self.battle_states == "LOSE":
+						default_gain_point["Bronze"] = -25
+						default_gain_point["Silver"] = -80
+						default_gain_point["Gold"] = -65
+
+						for rank, div in default_win.items():
+							default_win[rank] = 1
+						description.replace(
+							"{GAME_END_STATES}",
+							f"{user_name} has beed defeated by {ENEMY_NAME} on turn {self.current_turn}!"
+						)
+
+					else:
+						description.replace(
+							"{GAME_END_STATES}",
+							f"{user_name} defeated {ENEMY_NAME} on turn {self.current_turn} and won the match!"
+						)
+
 					U_RANK = check["SJ-DATA"]["RANK_DATA"]["C_RANK"]
 					E_RANK = ENEMY["SJ-DATA"]["RANK_DATA"]["C_RANK"]
 
 					U_TURNS = self.current_turn
 
-					# Gainining Normal Point
+					# Calculating Normal Point
 					gain_points = default_gain_point[U_RANK]
 					if (default_division[U_RANK] < default_division[E_RANK]) and (U_RANK != "gold"):
 					    gain_points += int(default_gain_point[U_RANK] * default_win[U_RANK])
@@ -1320,39 +1406,144 @@ class Rpg_Cmd(commands.Cog):
 					Money_gain = random.randint(1000, 10000)
 					check["N_economy_Data"]["Money"] += Money_gain
 
+					if gain_points >= 0:
+						gain_points = f"+{gain_points}"
+
 					cursor.update_many({"id":user_id}, {"$set":{
 						"N_economy_Data":check["N_economy_Data"],
 						"SJ-DATA":check["SJ-DATA"]
 					}})
 
+					description.replace("{DMGDLT}", f"{self.damage_total}")
+					description.replace("{DMGTKN}", f"{self.damaged_total}")
+					description.replace("{TTLDDG}", f"{self.dodge_total}")
+					description.replace("{TTLTRN}", f"{self.self.current_turn}")
+
+					description.replace("{UPCDESTRY}", f"{len(self.UComputer_Destroyed)}")
+					description.replace("{EPCDESTRY}", f"{len(self.EComputer_Destroyed)}")
+
+					description.replace("{RPOINT_GAIN}", f"{gain_points} | {check['SJ-DATA']['RANK_DATA']['P_RANK']}/{check['SJ-DATA']['RANK_DATA']['PMRANK']}")
+					description.replace("{MONEY_GAIN}", f"+{Money_gain}")
+
 					Embed = discord.Embed(
 						title=f"{user_name} | Battle Victory!",
-						description=(
-							f"```{user_name} defeated {ENEMY_NAME} and won the match!```{nl}"
-							f"> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
-							f"```diff{nl}"
-							f"+ Damage Dealt  : {self.damage_total} {nl}"
-							f"- Damage Taken  : {self.damaged_total} {nl}"
-							f"+ Dodge Counter : {self.dodge_total} {nl}"
-							f"+ Turn Total    : {self.current_turn} {nl}"
-							f"```{nl}"
-							f"```diff{nl}"
-							f"- User Pc Destroyed     : {self.current_turn} {nl}"
-							f"+ Enemy Pc Destroyed    : {self.current_turn} {nl}"
-							f"```{nl}"
-							f"> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯{nl}"
-							f"```cs{nl}"
-							f"Rank Point      : +{gain_points}/{check['SJ-DATA']['RANK_DATA']['PMRANK']}{nl}"
-							f"Money           : +{Money_gain}{nl}"
-							f"Component       : -{nl}"
-							f"Scraps          : -{nl}"
-							f"```"
-						),
+						description=str(description),
 						color=color
 					)
+					Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+					Embed.set_image(url=f'attachment://{user_name}_battle.png')
+
 					for items in self.children:
 						items.disabled = True
-					await interaction.edit_original_message(embed=Embed,view=self)
+					return await interaction.edit_original_message(embed=Embed,view=self)
+
+				Desc_Holder = self.based_turn_descript
+				for holder_loops in range(len(ENEM_PARTY)):
+					Turn_Of = random.choice(["Attack", "Deffend"])
+					Curr = ENEM_PARTY[holder_loops]
+					Targets_id = random.randint(0, int(len(USER_PARTY)-1))
+					Targets = USER_PARTY[Targets_id]
+
+					# NOTE : This is actually the same way for the bot to attack like the user did.
+					#        Its using all same random.randint() and etc. Only the name that was switched.
+
+					if Turn_Of == "Attack" and f"E{holder_loops}" not in self.enemy_id_holder_turn_done:
+						Attack_Message = f"- {ENEMY_NAME} Hacking {user_name}'s PC <U{Targets_id}> And Dealt " + "{DMG_HOLDER} {DAMAGE_TYPE}!"
+
+						# ATTACKER SECTION
+
+						Computer = Curr["Comp"]
+						Current_Healt = Curr["CHEALT"]
+
+						Start_Damage = Curr["B_Dmg"]
+						End_Damage = Curr["M_Dmg"]
+
+						Crit_Rate = Curr["C_Rte"]
+						Crit_Damage = Curr["C_Dmg"]
+
+						# Generating Random Attack Damage (NO C-RATE / C-DMG)
+						Damage_Base = random.randint(Start_Damage, End_Damage)
+						Attack_Message = Attack_Message.replace("{DAMAGE_TYPE}", f"Virus Damage")
+
+						# Generating Crit-Damage
+						Crit_Rolls = random.randint(1, 100)
+						if not Crit_Rate < Crit_Rolls:
+							Damage_Base = int(Damage_Base + (Crit_Damage / 100))
+							Attack_Message = Attack_Message.replace("Virus Damage", f"Crit-Virus Damage")
+
+						# DEFENDER SECTION
+						
+						EComputer = Targets["Comp"]
+						ECurrent_Healt = Targets["CHEALT"]
+						EBase_Defense = Targets["B_Def"]
+
+						# Reduce Damage That Dealt Using Base_Defence
+						Damage_Base -= random.randint(EBase_Defense, (EBase_Defense + random.randint(1, 3)))
+						if Damage_Base <= 0:
+							Damage_Base = random.randint(1, 10)
+
+						Damage_Base *= 3 # BALANCING DAMAGE (FOR NOW)
+						Attack_Message = Attack_Message.replace("{DMG_HOLDER}", f"<{Damage_Base}>")
+
+						# Generating Enemy Dodge
+						Dodge_Chance = self.user_dodge_chance[Targets_id]
+						Dodge_Rolls = random.randint(1, 100)
+
+						if not Dodge_Chance < Dodge_Rolls:
+							Damage_Base = 0
+							Attack_Message = f"- {ENEMY_NAME} Trying To Hack {user_name}'s PC but Failed."
+
+						Targets["CHEALT"] -= Damage_Base
+						if Targets["CHEALT"] <= 0:
+							Targets["CHEALT"] = 0
+							Targets["Computer"] = "Destroyed_Pc"
+							self.UComputer_Destroyed.append(f"E{E_ids}")
+							self.battle_current_mssage.append(f"- {user_name}'s PC <U{Targets_id}> Has Been Destroyed!")
+
+						self.damaged_total += Damage_Base
+						self.battle_current_mssage.append(Attack_Message)
+
+						self.enemy_id_holder_turn_done.append(f"E{holder_loops}")
+
+					elif Turn_Of == "Deffend" and f"E{holder_loops}" not in self.enemy_id_holder_turn_done:
+
+						# Increasing Number of PC Defense By 40% And Increasing PC Dodge Chance By 10%
+						Base_deff = Curr["B_Def"]
+						Base_deff = int(Base_deff * 0.4)
+						Curr["B_Def"] = Base_deff
+						self.enmy_dodge_chance[Targets_id] += 10
+
+						self.enemy_id_holder_turn_done.append(f"E{holder_loops}")
+						self.battle_current_mssage.append(f"- {ENEMY_NAME}'s PC <E{holder_loops}> Deffense has been increase by 40%!")
+
+				Desc_Holder = Desc_Holder.replace(f"<Battle Message>", f"{nl.join(self.battle_current_mssage[-5:])}")
+				for items in self.children:
+					items.disabled = False
+				self.end_turn_button.disabled = True
+
+				Image_Procces = await battle_card(
+					[USER_PARTY, ENEM_PARTY],
+					{"User_Pfp":user_pfp, "EUser_Pfp":ENEMY_PFP},
+					{"User":user_name,"Enemy":ENEMY_NAME}
+				)
+				Send_Image = discord.File(fp=io.BytesIO(Image_Procces[0]), filename=f'{user_name}_battle.png')
+				Embed = discord.Embed(
+					title=f"{user_name} CyberHack Battle",
+					description=Desc_Holder,
+					color=color
+				)
+				Embed.set_footer(text=f"Executor : {user_name} | {Time}")
+				Embed.set_image(url=f'attachment://{user_name}_battle.png')
+
+				self.current_turn += 1
+				self.current_user_selected = []
+				self.current_enmy_selected = []
+				self.enemy_id_holder_turn_done = []
+				self.based_turn_descript = None
+				self.current_turn_action = []
+				self.turn_done = []
+
+				return await interaction.edit_original_message(attachments=[Send_Image], embed=Embed, view=self)
 
 			async def on_timeout(self):
 				for items in self.children:
